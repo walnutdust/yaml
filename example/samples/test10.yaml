@@ -10,7 +10,7 @@ recipe:
     inputs: Dish
     outputs: ["DishOffering[]/Rated"]
 tags:
-  booleans: [ true, false ] # trailing space after false not detected yet
+  booleans: [ true, false ] 
   dates:
   - iso8601: 2001-12-14t21:59:43.10-05:00
   - spaced: 2001-12-14 21:59:43.10 -5

@@ -250,10 +250,6 @@ class YamlScalar extends YamlNode {
   @override
   String toPrettyString([int indentationLevel = 0]) {
     switch (style) {
-      case ScalarStyle.SINGLE_QUOTED:
-        return '\'$originalString\'';
-      case ScalarStyle.DOUBLE_QUOTED:
-        return '${json.encode(originalString)}';
       case ScalarStyle.FOLDED:
         return '>\n${indent(originalString, 2)}';
       case ScalarStyle.LITERAL:

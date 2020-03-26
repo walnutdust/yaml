@@ -1262,7 +1262,7 @@ class Scanner {
     var doubleBuffer = DoubleBuffer();
 
     // Eat the left quote.
-    _scanner.readChar();
+    doubleBuffer.raw.writeCharCode(_scanner.readChar());
 
     while (true) {
       // Check that there are no document indicators at the beginning of the
@@ -1282,16 +1282,15 @@ class Scanner {
             char == SINGLE_QUOTE &&
             _scanner.peekChar(1) == SINGLE_QUOTE) {
           // An escaped single quote.
-          _scanner.readChar();
-          _scanner.readChar();
-          doubleBuffer.writeCharCode(SINGLE_QUOTE);
+          doubleBuffer.writeCharCode(_scanner.readChar());
+          doubleBuffer.raw.writeCharCode(_scanner.readChar());
         } else if (char == (singleQuote ? SINGLE_QUOTE : DOUBLE_QUOTE)) {
           // The closing quote.
           break;
         } else if (!singleQuote && char == BACKSLASH && _isBreakAt(1)) {
           // An escaped newline.
           _scanner.readChar();
-          _skipLine();
+          _skipLine(); // TODO skipline vs readLine
           leadingBlanks = true;
           break;
         } else if (!singleQuote && char == BACKSLASH) {
@@ -1301,32 +1300,32 @@ class Scanner {
           int codeLength;
           switch (_scanner.peekChar(1)) {
             case NUMBER_0:
-              doubleBuffer.writeCharCode(NULL);
+              doubleBuffer.processed.writeCharCode(NULL);
               break;
             case LETTER_A:
-              doubleBuffer.writeCharCode(BELL);
+              doubleBuffer.processed.writeCharCode(BELL);
               break;
             case LETTER_B:
-              doubleBuffer.writeCharCode(BACKSPACE);
+              doubleBuffer.processed.writeCharCode(BACKSPACE);
               break;
             case LETTER_T:
             case TAB:
-              doubleBuffer.writeCharCode(TAB);
+              doubleBuffer.processed.writeCharCode(TAB);
               break;
             case LETTER_N:
-              doubleBuffer.writeCharCode(LF);
+              doubleBuffer.processed.writeCharCode(LF);
               break;
             case LETTER_V:
-              doubleBuffer.writeCharCode(VERTICAL_TAB);
+              doubleBuffer.processed.writeCharCode(VERTICAL_TAB);
               break;
             case LETTER_F:
-              doubleBuffer.writeCharCode(FORM_FEED);
+              doubleBuffer.processed.writeCharCode(FORM_FEED);
               break;
             case LETTER_R:
-              doubleBuffer.writeCharCode(CR);
+              doubleBuffer.processed.writeCharCode(CR);
               break;
             case LETTER_E:
-              doubleBuffer.writeCharCode(ESCAPE);
+              doubleBuffer.processed.writeCharCode(ESCAPE);
               break;
             case SP:
             case DOUBLE_QUOTE:
@@ -1335,19 +1334,19 @@ class Scanner {
               // libyaml doesn't support an escaped forward slash, but it was
               // added in YAML 1.2. See section 5.7:
               // http://yaml.org/spec/1.2/spec.html#id2776092
-              doubleBuffer.writeCharCode(_scanner.peekChar(1));
+              doubleBuffer.processed.writeCharCode(_scanner.peekChar(1));
               break;
             case LETTER_CAP_N:
-              doubleBuffer.writeCharCode(NEL);
+              doubleBuffer.processed.writeCharCode(NEL);
               break;
             case UNDERSCORE:
-              doubleBuffer.writeCharCode(NBSP);
+              doubleBuffer.processed.writeCharCode(NBSP);
               break;
             case LETTER_CAP_L:
-              doubleBuffer.writeCharCode(LINE_SEPARATOR);
+              doubleBuffer.processed.writeCharCode(LINE_SEPARATOR);
               break;
             case LETTER_CAP_P:
-              doubleBuffer.writeCharCode(PARAGRAPH_SEPARATOR);
+              doubleBuffer.processed.writeCharCode(PARAGRAPH_SEPARATOR);
               break;
             case LETTER_X:
               codeLength = 2;
@@ -1363,20 +1362,21 @@ class Scanner {
                   'Unknown escape character.', _scanner.spanFrom(escapeStart));
           }
 
-          _scanner.readChar();
-          _scanner.readChar();
+          doubleBuffer.raw.writeCharCode(_scanner.readChar());
+          doubleBuffer.raw.writeCharCode(_scanner.readChar());
 
           if (codeLength != null) {
             var value = 0;
             for (var i = 0; i < codeLength; i++) {
               if (!_isHex) {
-                _scanner.readChar();
+                doubleBuffer.raw.writeCharCode(_scanner.readChar());
                 throw YamlException(
                     'Expected $codeLength-digit hexidecimal number.',
                     _scanner.spanFrom(escapeStart));
               }
-
-              value = (value << 4) + _asHex(_scanner.readChar());
+              var nextChar = _scanner.readChar();
+              doubleBuffer.raw.writeCharCode(nextChar);
+              value = (value << 4) + _asHex(nextChar);
             }
 
             // Check the value and write the character.
@@ -1385,7 +1385,7 @@ class Scanner {
                   _scanner.spanFrom(escapeStart));
             }
 
-            doubleBuffer.writeCharCode(value);
+            doubleBuffer.processed.writeCharCode(value);
           }
         } else {
           doubleBuffer.writeCharCode(_scanner.readChar());
@@ -1435,7 +1435,7 @@ class Scanner {
     }
 
     // Eat the right quote.
-    _scanner.readChar();
+    doubleBuffer.raw.writeCharCode(_scanner.readChar());
 
     return ScalarToken(
         _scanner.spanFrom(start),
@@ -1509,7 +1509,7 @@ class Scanner {
           // Check if it's a first line break.
           if (leadingBreak.isEmpty) {
             leadingBreak = _readLine();
-            whitespace.clear(); // ?(walnut) what does this do?
+            whitespace.clear();
           } else {
             trailingBreaks = _readLine();
           }
