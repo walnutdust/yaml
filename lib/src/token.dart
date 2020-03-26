@@ -111,13 +111,18 @@ class ScalarToken implements Token {
   @override
   final FileSpan span;
 
-  /// The unparsed contents of the value..
+  /// The unparsed contents of the value.
   final String value;
+
+  /// The raw contents of the scalar.
+  /// This differs from `value` in that `value` processes the scalar
+  /// to remove whitespace where necessary.
+  final String rawContent;
 
   /// The style of the scalar in the original source.
   final ScalarStyle style;
 
-  ScalarToken(this.span, this.value, this.style);
+  ScalarToken(this.span, this.value, this.rawContent, this.style);
 
   @override
   String toString() => 'SCALAR $style "$value"';

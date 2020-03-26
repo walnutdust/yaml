@@ -53,6 +53,11 @@ class YamlMapWrapper extends MapBase
   @override
   bool operator ==(Object other) =>
       other is YamlMapWrapper && other._dartMap == _dartMap;
+
+  @override
+  String toPrettyString([int indentationLevel = 0]) {
+    return 'YamlMapWrapper.toPrettyString should not be called!';
+  }
 }
 
 /// The implementation of [YamlMapWrapper.nodes] as a wrapper around the Dart
@@ -64,8 +69,8 @@ class _YamlMapNodes extends MapBase<dynamic, YamlNode>
   final SourceSpan _span;
 
   @override
-  Iterable get keys =>
-      _dartMap.keys.map((key) => YamlScalar.internalWithSpan(key, _span));
+  Iterable get keys => _dartMap.keys
+      .map((key) => YamlScalar.internalWithSpan(key, _span, key.toString()));
 
   _YamlMapNodes(this._dartMap, this._span);
 
@@ -137,6 +142,11 @@ class YamlListWrapper extends ListBase implements YamlList {
   @override
   bool operator ==(Object other) =>
       other is YamlListWrapper && other._dartList == _dartList;
+
+  @override
+  String toPrettyString([int indentationLevel = 0]) {
+    return 'YamlListWrapper.toPrettyString should not be called!';
+  }
 }
 
 // TODO(nweiz): Use UnmodifiableListMixin when issue 18970 is fixed.
@@ -176,5 +186,5 @@ class _YamlListNodes extends ListBase<YamlNode> {
 YamlNode _nodeForValue(value, SourceSpan span) {
   if (value is Map) return YamlMapWrapper._(value, span);
   if (value is List) return YamlListWrapper._(value, span);
-  return YamlScalar.internalWithSpan(value, span);
+  return YamlScalar.internalWithSpan(value, span, value.toString());
 }

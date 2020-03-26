@@ -1,0 +1,46 @@
+verb: RecommendCafes
+map:
+  a: 
+    b: 1
+recipe:
+  - verb: Score
+    outputs: ["DishOffering[]/Scored"]
+    name: Hotpot
+  - verb: Rate
+    inputs: Dish
+    outputs: ["DishOffering[]/Rated"]
+tags:
+  booleans: [ true, false ] # trailing space after false not detected yet
+  dates:
+  - iso8601: 2001-12-14t21:59:43.10-05:00
+  - spaced: 2001-12-14 21:59:43.10 -5
+  - date: 2002-12-14
+  numbers:
+  - int: 12345
+  - negative: -345
+  - floating-point: 345.678
+  - hexidecimal: 0x123abc
+  - exponential: 12.3015e+02
+  - octal: 0o14
+  others:
+  - ~
+  strings:
+  - unicode: "Sosa did fine.\u263A"
+  - control: "\b1998\t1999\t2000\n"
+  - hex esc: "\x0d\x0a is \r\n"
+  - single: '"Howdy!" he cried.'
+  - quoted: ' # Not a ''comment''.'
+  - tie-fighter: '|\-*-/|'
+  - plain: 
+      This unquoted scalar
+      spans many lines.
+
+      
+  - quoted: "So does this
+      quoted scalar.\n"
+  - accomplishment: >
+      Mark set a major league
+      home run record in 1998.
+  - stats: |
+      65 Home Runs
+      0.278 Batting Average

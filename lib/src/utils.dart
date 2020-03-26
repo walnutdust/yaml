@@ -39,3 +39,22 @@ YamlWarningCallback yamlWarningCallback = (message, [span]) {
   if (span != null) message = span.message(message);
   print(message);
 };
+
+// TODO
+/// indentationLevel > 0
+String indent(String text, [int indentationLevel = 0, String prefix = '']) {
+  if (prefix.length > indentationLevel) {
+    // TODO throw error
+  }
+  var lines = text.split('\n');
+  var spaces = List.filled(indentationLevel, ' ').join('');
+  var replacement = prefix + spaces.substring(prefix.length);
+  var updatedHeader = '$replacement${lines.first}';
+
+  if (lines.length == 1) {
+    return updatedHeader;
+  }
+
+  var updatedLines = lines.skip(1).map((line) => '$spaces$line');
+  return '$updatedHeader\n${updatedLines.join('\n')}';
+}

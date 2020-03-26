@@ -23,7 +23,7 @@ class YamlDocument {
   final List<TagDirective> tagDirectives;
 
   /// Whether the beginning of the document was implicit (versus explicit via
-  /// `===`).
+  /// `---`).
   final bool startImplicit;
 
   /// Whether the end of the document was implicit (versus explicit via `...`).
@@ -37,6 +37,15 @@ class YamlDocument {
 
   @override
   String toString() => contents.toString();
+
+  String toPrettyString() {
+    var s = '';
+
+    s = startImplicit ? s : s + '---\n';
+    s += contents.toPrettyString();
+    s = endImplicit ? s : s + '...\n';
+    return s;
+  }
 }
 
 /// A directive indicating which version of YAML a document was written to.

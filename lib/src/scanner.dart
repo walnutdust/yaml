@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:source_span/source_span.dart';
 import 'package:string_scanner/string_scanner.dart';
 
+import 'double_buffer.dart';
 import 'style.dart';
 import 'token.dart';
 import 'utils.dart';
@@ -350,6 +351,7 @@ class Scanner {
 
     _scanToNextToken();
     _staleSimpleKeys();
+
     _unrollIndent(_scanner.column);
 
     if (_scanner.isDone) {
@@ -771,14 +773,15 @@ class Scanner {
   }
 
   /// Produces a [TokenType.scalar] token with style [ScalarStyle.PLAIN].
-  void _fetchPlainScalar() {
+  void _fetchPlainScalar([String toThisToken = '']) {
     _saveSimpleKey();
     _simpleKeyAllowed = false;
-    _tokens.add(_scanPlainScalar());
+    _tokens.add(_scanPlainScalar(toThisToken));
   }
 
   /// Eats whitespace and comments until the next token is found.
-  void _scanToNextToken() {
+  String _scanToNextToken() {
+    var buffer = StringBuffer();
     var afterLineBreak = false;
     while (true) {
       // Allow the BOM to start a line.
@@ -791,7 +794,7 @@ class Scanner {
       while (_scanner.peekChar() == SP ||
           ((!_inBlockContext || !afterLineBreak) &&
               _scanner.peekChar() == TAB)) {
-        _scanner.readChar();
+        buffer.writeCharCode(_scanner.readChar());
       }
 
       if (_scanner.peekChar() == TAB) {
@@ -804,7 +807,7 @@ class Scanner {
 
       // If we're at a line break, eat it.
       if (_isBreak) {
-        _skipLine();
+        buffer.write(_skipLine());
 
         // In the block context, a new line may start a simple key.
         if (_inBlockContext) _simpleKeyAllowed = true;
@@ -814,6 +817,8 @@ class Scanner {
         break;
       }
     }
+
+    return buffer.toString();
   }
 
   /// Scans a [TokenType.YAML_DIRECTIVE] or [TokenType.tagDirective] token.
@@ -1150,7 +1155,7 @@ class Scanner {
     var trailingBreaks = pair.last;
 
     // Scan the block scalar contents.
-    var buffer = StringBuffer();
+    var doubleBuffer = DoubleBuffer();
     var leadingBreak = '';
     var leadingBlank = false;
     var trailingBlank = false;
@@ -1172,14 +1177,17 @@ class Scanner {
           !leadingBlank &&
           !trailingBlank) {
         // Do we need to join the lines with a space?
-        if (trailingBreaks.isEmpty) buffer.writeCharCode(SP);
+        if (trailingBreaks.isEmpty) {
+          doubleBuffer.raw.write(leadingBreak);
+          doubleBuffer.processed.writeCharCode(SP);
+        }
       } else {
-        buffer.write(leadingBreak);
+        doubleBuffer.write(leadingBreak);
       }
       leadingBreak = '';
 
       // Append the remaining line breaks.
-      buffer.write(trailingBreaks);
+      doubleBuffer.write(trailingBreaks);
 
       // Is there leading whitespace?
       leadingBlank = _isBlank;
@@ -1188,7 +1196,7 @@ class Scanner {
       while (!_isBreakOrEnd) {
         _scanner.readChar();
       }
-      buffer.write(_scanner.substring(startPosition));
+      doubleBuffer.write(_scanner.substring(startPosition));
       end = _scanner.state;
 
       // libyaml always reads a line here, but this breaks on block scalars at
@@ -1203,10 +1211,13 @@ class Scanner {
     }
 
     // Chomp the tail.
-    if (chomping != _Chomping.strip) buffer.write(leadingBreak);
-    if (chomping == _Chomping.keep) buffer.write(trailingBreaks);
+    if (chomping != _Chomping.strip) doubleBuffer.write(leadingBreak);
+    if (chomping == _Chomping.keep) doubleBuffer.write(trailingBreaks);
 
-    return ScalarToken(_scanner.spanFrom(start, end), buffer.toString(),
+    return ScalarToken(
+        _scanner.spanFrom(start, end),
+        doubleBuffer.processed.toString(),
+        doubleBuffer.raw.toString(),
         literal ? ScalarStyle.LITERAL : ScalarStyle.FOLDED);
   }
 
@@ -1248,7 +1259,7 @@ class Scanner {
   // Scans a quoted scalar.
   Token _scanFlowScalar({bool singleQuote = false}) {
     var start = _scanner.state;
-    var buffer = StringBuffer();
+    var doubleBuffer = DoubleBuffer();
 
     // Eat the left quote.
     _scanner.readChar();
@@ -1273,7 +1284,7 @@ class Scanner {
           // An escaped single quote.
           _scanner.readChar();
           _scanner.readChar();
-          buffer.writeCharCode(SINGLE_QUOTE);
+          doubleBuffer.writeCharCode(SINGLE_QUOTE);
         } else if (char == (singleQuote ? SINGLE_QUOTE : DOUBLE_QUOTE)) {
           // The closing quote.
           break;
@@ -1290,32 +1301,32 @@ class Scanner {
           int codeLength;
           switch (_scanner.peekChar(1)) {
             case NUMBER_0:
-              buffer.writeCharCode(NULL);
+              doubleBuffer.writeCharCode(NULL);
               break;
             case LETTER_A:
-              buffer.writeCharCode(BELL);
+              doubleBuffer.writeCharCode(BELL);
               break;
             case LETTER_B:
-              buffer.writeCharCode(BACKSPACE);
+              doubleBuffer.writeCharCode(BACKSPACE);
               break;
             case LETTER_T:
             case TAB:
-              buffer.writeCharCode(TAB);
+              doubleBuffer.writeCharCode(TAB);
               break;
             case LETTER_N:
-              buffer.writeCharCode(LF);
+              doubleBuffer.writeCharCode(LF);
               break;
             case LETTER_V:
-              buffer.writeCharCode(VERTICAL_TAB);
+              doubleBuffer.writeCharCode(VERTICAL_TAB);
               break;
             case LETTER_F:
-              buffer.writeCharCode(FORM_FEED);
+              doubleBuffer.writeCharCode(FORM_FEED);
               break;
             case LETTER_R:
-              buffer.writeCharCode(CR);
+              doubleBuffer.writeCharCode(CR);
               break;
             case LETTER_E:
-              buffer.writeCharCode(ESCAPE);
+              doubleBuffer.writeCharCode(ESCAPE);
               break;
             case SP:
             case DOUBLE_QUOTE:
@@ -1324,19 +1335,19 @@ class Scanner {
               // libyaml doesn't support an escaped forward slash, but it was
               // added in YAML 1.2. See section 5.7:
               // http://yaml.org/spec/1.2/spec.html#id2776092
-              buffer.writeCharCode(_scanner.peekChar(1));
+              doubleBuffer.writeCharCode(_scanner.peekChar(1));
               break;
             case LETTER_CAP_N:
-              buffer.writeCharCode(NEL);
+              doubleBuffer.writeCharCode(NEL);
               break;
             case UNDERSCORE:
-              buffer.writeCharCode(NBSP);
+              doubleBuffer.writeCharCode(NBSP);
               break;
             case LETTER_CAP_L:
-              buffer.writeCharCode(LINE_SEPARATOR);
+              doubleBuffer.writeCharCode(LINE_SEPARATOR);
               break;
             case LETTER_CAP_P:
-              buffer.writeCharCode(PARAGRAPH_SEPARATOR);
+              doubleBuffer.writeCharCode(PARAGRAPH_SEPARATOR);
               break;
             case LETTER_X:
               codeLength = 2;
@@ -1374,10 +1385,10 @@ class Scanner {
                   _scanner.spanFrom(escapeStart));
             }
 
-            buffer.writeCharCode(value);
+            doubleBuffer.writeCharCode(value);
           }
         } else {
-          buffer.writeCharCode(_scanner.readChar());
+          doubleBuffer.writeCharCode(_scanner.readChar());
         }
       }
 
@@ -1412,12 +1423,13 @@ class Scanner {
       // Join the whitespace or fold line breaks.
       if (leadingBlanks) {
         if (leadingBreak.isNotEmpty && trailingBreaks.isEmpty) {
-          buffer.writeCharCode(SP);
+          doubleBuffer.raw.write(leadingBreak);
+          doubleBuffer.processed.writeCharCode(SP);
         } else {
-          buffer.write(trailingBreaks);
+          doubleBuffer.write(trailingBreaks);
         }
       } else {
-        buffer.write(whitespace);
+        doubleBuffer.write(whitespace);
         whitespace.clear();
       }
     }
@@ -1425,19 +1437,24 @@ class Scanner {
     // Eat the right quote.
     _scanner.readChar();
 
-    return ScalarToken(_scanner.spanFrom(start), buffer.toString(),
+    return ScalarToken(
+        _scanner.spanFrom(start),
+        doubleBuffer.processed.toString(),
+        doubleBuffer.raw.toString(),
         singleQuote ? ScalarStyle.SINGLE_QUOTED : ScalarStyle.DOUBLE_QUOTED);
   }
 
   /// Scans a plain scalar.
-  Token _scanPlainScalar() {
+  Token _scanPlainScalar([String toThisToken = '']) {
     var start = _scanner.state;
     var end = _scanner.state;
-    var buffer = StringBuffer();
+    var doubleBuffer = DoubleBuffer();
     var leadingBreak = '';
     var trailingBreaks = '';
     var whitespace = StringBuffer();
     var indent = _indent + 1;
+
+    doubleBuffer.raw.write(toThisToken);
 
     while (true) {
       // Check for a document indicator.
@@ -1447,17 +1464,17 @@ class Scanner {
       if (_scanner.peekChar() == HASH) break;
 
       if (_isPlainChar) {
-        // Join the whitespace or fold line breaks.
         if (leadingBreak.isNotEmpty) {
           if (trailingBreaks.isEmpty) {
-            buffer.writeCharCode(SP);
+            doubleBuffer.raw.write(leadingBreak);
+            doubleBuffer.processed.writeCharCode(SP);
           } else {
-            buffer.write(trailingBreaks);
+            doubleBuffer.write(trailingBreaks);
           }
           leadingBreak = '';
           trailingBreaks = '';
         } else {
-          buffer.write(whitespace);
+          doubleBuffer.write(whitespace);
           whitespace.clear();
         }
       }
@@ -1468,7 +1485,7 @@ class Scanner {
       while (_isPlainChar) {
         _scanner.readChar();
       }
-      buffer.write(_scanner.substring(startPosition));
+      doubleBuffer.write(_scanner.substring(startPosition));
       end = _scanner.state;
 
       // Is it the end?
@@ -1492,7 +1509,7 @@ class Scanner {
           // Check if it's a first line break.
           if (leadingBreak.isEmpty) {
             leadingBreak = _readLine();
-            whitespace.clear();
+            whitespace.clear(); // ?(walnut) what does this do?
           } else {
             trailingBreaks = _readLine();
           }
@@ -1500,22 +1517,36 @@ class Scanner {
       }
 
       // Check the indentation level.
-      if (_inBlockContext && _scanner.column < indent) break;
+      if (_inBlockContext && _scanner.column < indent) {
+        if (trailingBreaks.isNotEmpty) {
+          doubleBuffer.raw.write(leadingBreak);
+          doubleBuffer.raw.write(trailingBreaks);
+        }
+
+        break;
+      }
     }
 
     // Allow a simple key after a plain scalar with leading blanks.
     if (leadingBreak.isNotEmpty) _simpleKeyAllowed = true;
 
     return ScalarToken(
-        _scanner.spanFrom(start, end), buffer.toString(), ScalarStyle.PLAIN);
+        _scanner.spanFrom(start, end),
+        doubleBuffer.processed.toString(),
+        doubleBuffer.raw.toString(),
+        ScalarStyle.PLAIN);
   }
 
   /// Moves past the current line break, if there is one.
-  void _skipLine() {
+  String _skipLine() {
     var char = _scanner.peekChar();
-    if (char != CR && char != LF) return;
-    _scanner.readChar();
-    if (char == CR && _scanner.peekChar() == LF) _scanner.readChar();
+    if (char != CR && char != LF) return '';
+    var s = String.fromCharCode(_scanner.readChar());
+    if (char == CR && _scanner.peekChar() == LF) {
+      s += String.fromCharCode(_scanner.readChar());
+    }
+
+    return s;
   }
 
   // Moves past the current line break and returns a newline.

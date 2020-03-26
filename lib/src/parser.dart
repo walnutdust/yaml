@@ -304,7 +304,7 @@ class Parser {
       _state = _states.removeLast();
       _scanner.scan();
       return ScalarEvent(span.expand(token.span), token.value, token.style,
-          anchor: anchor, tag: tag);
+          anchor: anchor, tag: tag, rawContent: token.rawContent);
     }
 
     if (token.type == TokenType.flowSequenceStart) {
@@ -333,7 +333,8 @@ class Parser {
 
     if (anchor != null || tag != null) {
       _state = _states.removeLast();
-      return ScalarEvent(span, '', ScalarStyle.PLAIN, anchor: anchor, tag: tag);
+      return ScalarEvent(span, '', ScalarStyle.PLAIN,
+          anchor: anchor, tag: tag, rawContent: '');
     }
 
     throw YamlException('Expected node content.', span);
@@ -649,7 +650,8 @@ class Parser {
 
   /// Generate an empty scalar event.
   Event _processEmptyScalar(SourceLocation location) =>
-      ScalarEvent(location.pointSpan() as FileSpan, '', ScalarStyle.PLAIN);
+      ScalarEvent(location.pointSpan() as FileSpan, '', ScalarStyle.PLAIN,
+          rawContent: '');
 
   /// Parses directives.
   Pair<VersionDirective, List<TagDirective>> _processDirectives() {

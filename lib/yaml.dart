@@ -50,8 +50,10 @@ YamlDocument loadYamlDocument(String yaml, {sourceUrl}) {
   var loader = Loader(yaml, sourceUrl: sourceUrl);
   var document = loader.load();
   if (document == null) {
-    return YamlDocument.internal(YamlScalar.internalWithSpan(null, loader.span),
-        loader.span, null, const []);
+    return YamlDocument.internal(
+        YamlScalar.internalWithSpan(null, loader.span, ''),
+        loader.span,
+        null, const []);
   }
 
   var nextDocument = loader.load();

@@ -66,7 +66,7 @@ void main() {
     expect(map['scalar'], 'value');
     expect(map.keys, unorderedEquals(['list', 'map', 'scalar']));
     expect(map.nodes.keys, everyElement(TypeMatcher<YamlScalar>()));
-    expect(map.nodes[YamlScalar.wrap('list')], equals([1, 2, 3]));
+    expect(map.nodes[YamlScalar.wrap('list', 'list')], equals([1, 2, 3]));
   });
 
   test('YamlMap.wrap() with a sourceUrl', () {

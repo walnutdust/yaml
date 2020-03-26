@@ -32,7 +32,7 @@ class DocumentStartEvent implements Event {
   final List<TagDirective> tagDirectives;
 
   /// Whether the document started implicitly (that is, without an explicit
-  /// `===` sequence).
+  /// `---` sequence).
   final bool isImplicit;
 
   DocumentStartEvent(this.span,
@@ -109,10 +109,14 @@ class ScalarEvent extends _ValueEvent {
   /// The contents of the scalar.
   final String value;
 
+  /// The raw contents of the scalar in the input.
+  final String rawContent;
+
   /// The style of the scalar in the original source.
   final ScalarStyle style;
 
-  ScalarEvent(this.span, this.value, this.style, {this.anchor, this.tag});
+  ScalarEvent(this.span, this.value, this.style,
+      {this.anchor, this.tag, this.rawContent});
 
   @override
   String toString() => '${super.toString()} "$value"';
