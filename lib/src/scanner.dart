@@ -1290,7 +1290,7 @@ class Scanner {
         } else if (!singleQuote && char == BACKSLASH && _isBreakAt(1)) {
           // An escaped newline.
           _scanner.readChar();
-          _skipLine(); // TODO skipline vs readLine
+          _skipLine();
           leadingBlanks = true;
           break;
         } else if (!singleQuote && char == BACKSLASH) {

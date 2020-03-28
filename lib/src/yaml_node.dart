@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:collection' as collection;
-import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:source_span/source_span.dart';
@@ -61,6 +60,7 @@ class YamlMap extends YamlCollection
   final Map<dynamic, YamlNode> nodes;
 
   /// The style used for the map in the original document.
+  @override
   final CollectionStyle style;
 
   @override

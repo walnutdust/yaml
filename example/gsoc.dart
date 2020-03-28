@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:yaml/yaml.dart';
 
 void main() async {
-  // testOneDirectory
+  // testOneDirectory('./example/samples/');
   testOneFile('./example/samples/test10.yaml');
 }
 

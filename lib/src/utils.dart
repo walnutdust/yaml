@@ -40,12 +40,18 @@ YamlWarningCallback yamlWarningCallback = (message, [span]) {
   print(message);
 };
 
-// TODO
+/// Helper method to indent a block of text by a certain indentation level,
+/// possibly adding a prefix.
 /// indentationLevel > 0
 String indent(String text, [int indentationLevel = 0, String prefix = '']) {
   if (prefix.length > indentationLevel) {
-    // TODO throw error
+    throw ('Indentation level $indentationLevel is less than prefix length!');
   }
+
+  if (indentationLevel < 0) {
+    throw ('Invalid indentation level $indentationLevel passed in');
+  }
+
   var lines = text.split('\n');
   var spaces = List.filled(indentationLevel, ' ').join('');
   var replacement = prefix + spaces.substring(prefix.length);
