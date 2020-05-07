@@ -52,13 +52,28 @@ class Printer {
     });
   }
 
+  void _loadFlowMap(YamlMap map) {
+    buffer.write('{');
+
+    map.nodes.entries.forEach((entry) {
+      buffer.write('${entry.key}: ');
+      _loadNode(entry.value);
+
+      if (entry.key != map.nodes.entries.last.key) {
+        buffer.write(',');
+      }
+    });
+
+    buffer.write('}');
+  }
+
   void _loadMap(YamlMap map) {
     switch (map.style) {
       case CollectionStyle.BLOCK:
         _loadBlockMap(map);
         break;
       default: // Treat the default case as a flow map
-        buffer.write('non-block map');
+        _loadFlowMap(map);
         break;
     }
   }

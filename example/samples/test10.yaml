@@ -3,12 +3,13 @@ verb: RecommendCafes # comment
 map:
   a: 
     b: 1
+    c: { d: 3, e: 4 }
 list:
   - 1
   - 2
 recipe:
   - verb: Score
-    outputs: ["DishOffering[]/Scored"]
+    outputs: ["DishOffering[]/Scored" , "Dishes"]
     name: Hotpot
   - verb: Rate
     inputs: Dish
