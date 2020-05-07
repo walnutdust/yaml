@@ -1,7 +1,11 @@
-verb: RecommendCafes
+verb: RecommendCafes # comment
+
 map:
   a: 
     b: 1
+list:
+  - 1
+  - 2
 recipe:
   - verb: Score
     outputs: ["DishOffering[]/Scored"]
@@ -12,9 +16,9 @@ recipe:
 tags:
   booleans: [ true, false ] 
   dates:
-  - iso8601: 2001-12-14t21:59:43.10-05:00
-  - spaced: 2001-12-14 21:59:43.10 -5
-  - date: 2002-12-14
+    - iso8601: 2001-12-14t21:59:43.10-05:00
+    - spaced: 2001-12-14 21:59:43.10 -5
+    - date: 2002-12-14
   numbers:
   - int: 12345
   - negative: -345

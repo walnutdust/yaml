@@ -10,7 +10,6 @@ import 'package:source_span/source_span.dart';
 import 'event.dart';
 import 'null_span.dart';
 import 'style.dart';
-import 'utils.dart';
 import 'yaml_node_wrapper.dart';
 
 /// An interface for parsed nodes from a YAML source tree.
@@ -37,13 +36,13 @@ abstract class YamlNode {
   /// [YamlList], it will return [this], since they already implement [Map] and
   /// [List], respectively.
   dynamic get value;
-
-  String toPrettyString([int indenationLevel = 0]);
 }
 
 abstract class YamlCollection extends YamlNode {
   /// The style used for the map in the original document.
-  final CollectionStyle style = CollectionStyle.ANY;
+  final CollectionStyle style;
+
+  YamlCollection(this.style);
 }
 
 /// A read-only [Map] parsed from YAML.
@@ -58,10 +57,6 @@ class YamlMap extends YamlCollection
   /// a map from a [YamlScalar] to a [YamlList], but since the key type is
   /// `dynamic` `map.nodes["foo"]` will still work.
   final Map<dynamic, YamlNode> nodes;
-
-  /// The style used for the map in the original document.
-  @override
-  final CollectionStyle style;
 
   @override
   Map get value => this;
@@ -91,51 +86,21 @@ class YamlMap extends YamlCollection
       YamlMapWrapper(dartMap, sourceUrl);
 
   /// Users of the library should not use this constructor.
-  YamlMap.internal(Map<dynamic, YamlNode> nodes, SourceSpan span, this.style)
-      : nodes = UnmodifiableMapView<dynamic, YamlNode>(nodes) {
+  YamlMap.internal(
+      Map<dynamic, YamlNode> nodes, SourceSpan span, CollectionStyle style)
+      : nodes = UnmodifiableMapView<dynamic, YamlNode>(nodes),
+        super(style) {
     _span = span;
   }
 
   @override
   dynamic operator [](key) => nodes[key]?.value;
-
-  @override
-  String toPrettyString([int indentationLevel = 0]) {
-    var s = '';
-
-    if (style == CollectionStyle.BLOCK) {
-      var prettyNodes = nodes.entries.map((entry) {
-        if (entry.value is YamlCollection &&
-            (entry.value as YamlCollection).style == CollectionStyle.BLOCK) {
-          return '${entry.key.toPrettyString()}:\n${entry.value.toPrettyString(2)}';
-        }
-        return '${entry.key.toPrettyString()}: ${entry.value.toPrettyString()}';
-      });
-      s += prettyNodes.join('\n');
-      s = indent(s, indentationLevel);
-    } else if (style == CollectionStyle.FLOW) {
-      s = '{ ';
-      nodes.forEach((k, v) {
-        s += '$k: $v';
-        if (k.toString() != keys.last.toString()) {
-          s += ', ';
-        }
-      });
-      s += ' }';
-    }
-
-    return s;
-  }
 }
 
 // TODO(nweiz): Use UnmodifiableListMixin when issue 18970 is fixed.
 /// A read-only [List] parsed from YAML.
 class YamlList extends YamlCollection with collection.ListMixin {
   final List<YamlNode> nodes;
-
-  /// The style used for the list in the original document.
-  @override
-  final CollectionStyle style;
 
   @override
   List get value => this;
@@ -170,8 +135,10 @@ class YamlList extends YamlCollection with collection.ListMixin {
       YamlListWrapper(dartList, sourceUrl);
 
   /// Users of the library should not use this constructor.
-  YamlList.internal(List<YamlNode> nodes, SourceSpan span, this.style)
-      : nodes = UnmodifiableListView<YamlNode>(nodes) {
+  YamlList.internal(
+      List<YamlNode> nodes, SourceSpan span, CollectionStyle style)
+      : nodes = UnmodifiableListView<YamlNode>(nodes),
+        super(style) {
     _span = span;
   }
 
@@ -181,29 +148,6 @@ class YamlList extends YamlCollection with collection.ListMixin {
   @override
   operator []=(int index, value) {
     throw UnsupportedError('Cannot modify an unmodifiable List');
-  }
-
-  @override
-  String toPrettyString([int indentationLevel = 0]) {
-    var s = '';
-
-    if (style == CollectionStyle.BLOCK) {
-      var prettyNodes = nodes.map((node) {
-        return '${indent(node.toPrettyString(), 2, '- ')}';
-      });
-      s += prettyNodes.join('\n');
-      s = indent(s, indentationLevel);
-    } else if (style == CollectionStyle.FLOW) {
-      s = '[';
-      for (var i = 0; i < nodes.length; i++) {
-        s += nodes[i].toPrettyString();
-        if (i != nodes.length - 1) {
-          s += ', ';
-        }
-      }
-      s += ']';
-    }
-    return s;
   }
 }
 
@@ -246,18 +190,6 @@ class YamlScalar extends YamlNode {
 
   @override
   String toString() => value.toString();
-
-  @override
-  String toPrettyString([int indentationLevel = 0]) {
-    switch (style) {
-      case ScalarStyle.FOLDED:
-        return '>\n${indent(originalString, 2)}';
-      case ScalarStyle.LITERAL:
-        return '|\n${indent(originalString, 2)}';
-      default:
-        return '$originalString';
-    }
-  }
 }
 
 /// Sets the source span of a [YamlNode].

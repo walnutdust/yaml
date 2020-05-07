@@ -6,6 +6,7 @@ import 'dart:collection';
 
 import 'package:source_span/source_span.dart';
 
+import 'printer.dart';
 import 'yaml_node.dart';
 
 /// A YAML document, complete with metadata.
@@ -39,12 +40,15 @@ class YamlDocument {
   String toString() => contents.toString();
 
   String toPrettyString() {
-    var s = '';
+    // var s = '';
 
-    s = startImplicit ? s : s + '---\n';
-    s += contents.toPrettyString();
-    s = endImplicit ? s : s + '...\n';
-    return s;
+    // s = startImplicit ? s : s + '---\n';
+    // s += contents.toPrettyString();
+    // s = endImplicit ? s : s + '...\n';
+    // return s;
+
+    var p = Printer(contents);
+    return p.toString();
   }
 }
 
