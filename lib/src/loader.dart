@@ -132,7 +132,8 @@ class Loader {
     }
 
     var children = <YamlNode>[];
-    var node = YamlList.internal(children, firstEvent.span, firstEvent.style);
+    var node = YamlList.internal(children, firstEvent.span, firstEvent.style,
+        preContent: firstEvent.preContent, postContent: firstEvent.postContent);
     _registerAnchor(firstEvent.anchor, node);
 
     var event = _parser.parse();
@@ -154,7 +155,8 @@ class Loader {
     }
 
     var children = deepEqualsMap<dynamic, YamlNode>();
-    var node = YamlMap.internal(children, firstEvent.span, firstEvent.style);
+    var node = YamlMap.internal(children, firstEvent.span, firstEvent.style,
+        preContent: firstEvent.preContent);
     _registerAnchor(firstEvent.anchor, node);
 
     var event = _parser.parse();

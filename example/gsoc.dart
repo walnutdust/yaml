@@ -14,7 +14,11 @@ void main() async {
   //docMap['verb'] = 'hello';
 
   print(doc.toPrettyString());
-  print(docMap['tags']['strings'][6]['plain']);
+
+  docMap['verb'] = 'hi';
+  docMap['noun'] = 'he';
+  print('---');
+  print(doc.toPrettyString());
 }
 
 void testOneDirectory(String testDirectoryPath) {

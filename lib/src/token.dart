@@ -10,8 +10,10 @@ import 'style.dart';
 class Token {
   final TokenType type;
   final FileSpan span;
+  final String preContent;
+  final String postContent;
 
-  Token(this.type, this.span);
+  Token(this.type, this.span, {this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => type.toString();
@@ -23,6 +25,10 @@ class VersionDirectiveToken implements Token {
   TokenType get type => TokenType.versionDirective;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The declared major version of the document.
   final int major;
@@ -30,7 +36,8 @@ class VersionDirectiveToken implements Token {
   /// The declared minor version of the document.
   final int minor;
 
-  VersionDirectiveToken(this.span, this.major, this.minor);
+  VersionDirectiveToken(this.span, this.major, this.minor,
+      {this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => 'VERSION_DIRECTIVE $major.$minor';
@@ -42,6 +49,10 @@ class TagDirectiveToken implements Token {
   TokenType get type => TokenType.tagDirective;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The tag handle used in the document.
   final String handle;
@@ -49,7 +60,8 @@ class TagDirectiveToken implements Token {
   /// The tag prefix that the handle maps to.
   final String prefix;
 
-  TagDirectiveToken(this.span, this.handle, this.prefix);
+  TagDirectiveToken(this.span, this.handle, this.prefix,
+      {this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => 'TAG_DIRECTIVE $handle $prefix';
@@ -61,10 +73,15 @@ class AnchorToken implements Token {
   TokenType get type => TokenType.anchor;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   final String name;
 
-  AnchorToken(this.span, this.name);
+  AnchorToken(this.span, this.name,
+      {this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => 'ANCHOR $name';
@@ -76,10 +93,15 @@ class AliasToken implements Token {
   TokenType get type => TokenType.alias;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   final String name;
 
-  AliasToken(this.span, this.name);
+  AliasToken(this.span, this.name,
+      {this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => 'ALIAS $name';
@@ -91,6 +113,10 @@ class TagToken implements Token {
   TokenType get type => TokenType.tag;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The tag handle for named tags.
   final String handle;
@@ -98,7 +124,8 @@ class TagToken implements Token {
   /// The tag suffix, or `null`.
   final String suffix;
 
-  TagToken(this.span, this.handle, this.suffix);
+  TagToken(this.span, this.handle, this.suffix,
+      {this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => 'TAG $handle $suffix';
@@ -110,6 +137,10 @@ class ScalarToken implements Token {
   TokenType get type => TokenType.scalar;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The unparsed contents of the value.
   final String value;
@@ -122,7 +153,8 @@ class ScalarToken implements Token {
   /// The style of the scalar in the original source.
   final ScalarStyle style;
 
-  ScalarToken(this.span, this.value, this.rawContent, this.style);
+  ScalarToken(this.span, this.value, this.rawContent, this.style,
+      this.preContent, this.postContent);
 
   @override
   String toString() => 'SCALAR $style "$value"';

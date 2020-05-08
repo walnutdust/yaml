@@ -51,7 +51,7 @@ YamlDocument loadYamlDocument(String yaml, {sourceUrl}) {
   var document = loader.load();
   if (document == null) {
     return YamlDocument.internal(
-        YamlScalar.internalWithSpan(null, loader.span, ''),
+        YamlScalar.internalWithSpan(null, loader.span, originalString: ''),
         loader.span,
         null, const []);
   }

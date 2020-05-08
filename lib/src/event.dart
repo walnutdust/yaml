@@ -11,8 +11,10 @@ import 'yaml_document.dart';
 class Event {
   final EventType type;
   final FileSpan span;
+  final String preContent;
+  final String postContent;
 
-  Event(this.type, this.span);
+  Event(this.type, this.span, {this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => type.toString();
@@ -24,6 +26,10 @@ class DocumentStartEvent implements Event {
   EventType get type => EventType.documentStart;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The document's `%YAML` directive, or `null` if there was none.
   final VersionDirective versionDirective;
@@ -38,7 +44,9 @@ class DocumentStartEvent implements Event {
   DocumentStartEvent(this.span,
       {this.versionDirective,
       List<TagDirective> tagDirectives,
-      this.isImplicit = true})
+      this.isImplicit = true,
+      this.preContent = '',
+      this.postContent = ''})
       : tagDirectives = tagDirectives ?? [];
 
   @override
@@ -51,12 +59,17 @@ class DocumentEndEvent implements Event {
   EventType get type => EventType.documentEnd;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// Whether the document ended implicitly (that is, without an explicit
   /// `...` sequence).
   final bool isImplicit;
 
-  DocumentEndEvent(this.span, {this.isImplicit = true});
+  DocumentEndEvent(this.span,
+      {this.isImplicit = true, this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => 'DOCUMENT_END';
@@ -68,11 +81,16 @@ class AliasEvent implements Event {
   EventType get type => EventType.alias;
   @override
   final FileSpan span;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The alias name.
   final String name;
 
-  AliasEvent(this.span, this.name);
+  AliasEvent(this.span, this.name,
+      {this.preContent = '', this.postContent = ''});
 
   @override
   String toString() => 'ALIAS $name';
@@ -105,6 +123,10 @@ class ScalarEvent extends _ValueEvent {
   final String anchor;
   @override
   final String tag;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The contents of the scalar.
   final String value;
@@ -116,7 +138,11 @@ class ScalarEvent extends _ValueEvent {
   final ScalarStyle style;
 
   ScalarEvent(this.span, this.value, this.style,
-      {this.anchor, this.tag, this.rawContent});
+      {this.anchor,
+      this.tag,
+      this.rawContent,
+      this.preContent = '',
+      this.postContent = ''});
 
   @override
   String toString() => '${super.toString()} "$value"';
@@ -132,11 +158,16 @@ class SequenceStartEvent extends _ValueEvent {
   final String anchor;
   @override
   final String tag;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The style of the collection in the original source.
   final CollectionStyle style;
 
-  SequenceStartEvent(this.span, this.style, {this.anchor, this.tag});
+  SequenceStartEvent(this.span, this.style,
+      {this.anchor, this.tag, this.preContent = '', this.postContent = ''});
 }
 
 /// An event indicating the beginning of a mapping.
@@ -149,11 +180,16 @@ class MappingStartEvent extends _ValueEvent {
   final String anchor;
   @override
   final String tag;
+  @override
+  final String preContent;
+  @override
+  final String postContent;
 
   /// The style of the collection in the original source.
   final CollectionStyle style;
 
-  MappingStartEvent(this.span, this.style, {this.anchor, this.tag});
+  MappingStartEvent(this.span, this.style,
+      {this.anchor, this.tag, this.preContent = '', this.postContent = ''});
 }
 
 /// The types of [Event] objects.

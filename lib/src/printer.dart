@@ -12,8 +12,15 @@ class _PositionAwareBuffer {
 
   void write(Object obj) {
     var s = obj.toString();
-    line += '\n'.allMatches(s).length;
-    column = s.length - s.lastIndexOf('\n') - 1;
+    var newLines = '\n'.allMatches(s).length;
+
+    line += newLines;
+
+    if (newLines > 0) {
+      column = s.length - s.lastIndexOf('\n') - 1;
+    } else {
+      column += s.length;
+    }
 
     buffer.write(s);
   }
@@ -30,16 +37,19 @@ class Printer {
 
   final _PositionAwareBuffer buffer = _PositionAwareBuffer();
 
+  final bool debug = false;
+
   Printer(this.contents);
 
   void _loadBlockMap(YamlMap map) {
+    buffer.write(map.preContent);
     map.nodes.entries.forEach((entry) {
       if (buffer.column == 0) {
         var indentation = map.span.start.column;
         var spaces = List.filled(indentation, ' ').join('');
         buffer.write(spaces);
       }
-      buffer.write('${entry.key}: ');
+      buffer.write('${entry.key}:');
       if (entry.value is YamlCollection &&
           (entry.value as YamlCollection).style == CollectionStyle.BLOCK) {
         buffer.write('\n');
@@ -50,13 +60,16 @@ class Printer {
         buffer.write('\n');
       }
     });
+
+    buffer.write(map.postContent);
   }
 
   void _loadFlowMap(YamlMap map) {
+    buffer.write(map.preContent);
     buffer.write('{');
 
     map.nodes.entries.forEach((entry) {
-      buffer.write('${entry.key}: ');
+      buffer.write('${entry.key}:');
       _loadNode(entry.value);
 
       if (entry.key != map.nodes.entries.last.key) {
@@ -65,6 +78,7 @@ class Printer {
     });
 
     buffer.write('}');
+    buffer.write(map.postContent);
   }
 
   void _loadMap(YamlMap map) {
@@ -79,24 +93,23 @@ class Printer {
   }
 
   void _loadBlockList(YamlList list) {
+    buffer.write(list.preContent);
     var indentation = list.span.start.column;
     var spaces = List.filled(indentation, ' ').join('');
 
     list.nodes.forEach((node) {
       buffer.write('$spaces- ');
-      // TODO
-      if (node is YamlCollection && node.style == CollectionStyle.BLOCK) {
-        // buffer.write('\n');
-      }
       _loadNode(node);
 
       if (node != list.nodes.last) {
         buffer.write('\n');
       }
     });
+    buffer.write(list.postContent);
   }
 
   void _loadFlowList(YamlList list) {
+    buffer.write(list.preContent);
     buffer.write('[');
 
     list.nodes.forEach((node) {
@@ -108,6 +121,7 @@ class Printer {
     });
 
     buffer.write(']');
+    buffer.write(list.postContent);
   }
 
   void _loadList(YamlList list) {
@@ -122,10 +136,22 @@ class Printer {
   }
 
   void _loadScalar(YamlScalar scalar) {
-    buffer.write('${scalar.originalString}');
+    switch (scalar.style) {
+      case ScalarStyle.FOLDED:
+      case ScalarStyle.LITERAL:
+        buffer.write('${scalar.originalString}');
+        break;
+      default:
+        buffer.write(
+            '${scalar.preContent}${scalar.originalString}${scalar.postContent}');
+        break;
+    }
   }
 
   void _loadNode(YamlNode node) {
+    if (debug) {
+      buffer.write('/(${node.span.start.line},${node.span.start.column})');
+    }
     switch (node.runtimeType) {
       case YamlScalar:
         _loadScalar(node as YamlScalar);
@@ -139,6 +165,10 @@ class Printer {
       default:
         buffer.write('${node.runtimeType}');
         break;
+    }
+
+    if (debug) {
+      buffer.write('(${node.span.end.line},${node.span.end.column})/');
     }
   }
 

@@ -304,19 +304,29 @@ class Parser {
       _state = _states.removeLast();
       _scanner.scan();
       return ScalarEvent(span.expand(token.span), token.value, token.style,
-          anchor: anchor, tag: tag, rawContent: token.rawContent);
+          anchor: anchor,
+          tag: tag,
+          rawContent: token.rawContent,
+          preContent: token.preContent,
+          postContent: token.postContent);
     }
 
     if (token.type == TokenType.flowSequenceStart) {
       _state = _State.FLOW_SEQUENCE_FIRST_ENTRY;
       return SequenceStartEvent(span.expand(token.span), CollectionStyle.FLOW,
-          anchor: anchor, tag: tag);
+          anchor: anchor,
+          tag: tag,
+          preContent: token.preContent,
+          postContent: token.postContent);
     }
 
     if (token.type == TokenType.flowMappingStart) {
       _state = _State.FLOW_MAPPING_FIRST_KEY;
       return MappingStartEvent(span.expand(token.span), CollectionStyle.FLOW,
-          anchor: anchor, tag: tag);
+          anchor: anchor,
+          tag: tag,
+          preContent: token.preContent,
+          postContent: token.postContent);
     }
 
     if (block && token.type == TokenType.blockSequenceStart) {

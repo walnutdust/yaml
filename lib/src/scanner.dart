@@ -348,7 +348,8 @@ class Scanner {
       return;
     }
 
-    _scanToNextToken();
+    // MARK(walnut): Grab comments and newlines to the next token to pass it.
+    var skippedString = _scanToNextToken();
     _staleSimpleKeys();
 
     _unrollIndent(_scanner.column);
@@ -379,10 +380,12 @@ class Scanner {
 
     switch (_scanner.peekChar()) {
       case LEFT_SQUARE:
-        _fetchFlowCollectionStart(TokenType.flowSequenceStart);
+        _fetchFlowCollectionStart(TokenType.flowSequenceStart,
+            preContent: skippedString);
         return;
       case LEFT_CURLY:
-        _fetchFlowCollectionStart(TokenType.flowMappingStart);
+        _fetchFlowCollectionStart(TokenType.flowMappingStart,
+            preContent: skippedString);
         return;
       case RIGHT_SQUARE:
         _fetchFlowCollectionEnd(TokenType.flowSequenceEnd);
@@ -425,14 +428,14 @@ class Scanner {
       // These characters may sometimes begin plain scalars.
       case HYPHEN:
         if (_isPlainCharAt(1)) {
-          _fetchPlainScalar();
+          _fetchPlainScalar(preContent: skippedString);
         } else {
           _fetchBlockEntry();
         }
         return;
       case QUESTION:
         if (_isPlainCharAt(1)) {
-          _fetchPlainScalar();
+          _fetchPlainScalar(preContent: skippedString);
         } else {
           _fetchKey();
         }
@@ -453,7 +456,7 @@ class Scanner {
         }
 
         if (_isPlainCharAt(1)) {
-          _fetchPlainScalar();
+          _fetchPlainScalar(preContent: skippedString);
         } else {
           _fetchValue();
         }
@@ -461,7 +464,7 @@ class Scanner {
       default:
         if (!_isNonBreak) _invalidScalarCharacter();
 
-        _fetchPlainScalar();
+        _fetchPlainScalar(preContent: skippedString);
         return;
     }
   }
@@ -628,11 +631,11 @@ class Scanner {
 
   /// Produces a [TokenType.flowSequenceStart] or
   /// [TokenType.flowMappingStart] token.
-  void _fetchFlowCollectionStart(TokenType type) {
+  void _fetchFlowCollectionStart(TokenType type, {String preContent}) {
     _saveSimpleKey();
     _increaseFlowLevel();
     _simpleKeyAllowed = true;
-    _addCharToken(type);
+    _addCharToken(type, preContent: preContent);
   }
 
   /// Produces a [TokenType.flowSequenceEnd] or [TokenType.flowMappingEnd]
@@ -735,10 +738,10 @@ class Scanner {
   /// Adds a token with [type] to [_tokens].
   ///
   /// The span of the new token is the current character.
-  void _addCharToken(TokenType type) {
+  void _addCharToken(TokenType type, {String preContent = ''}) {
     var start = _scanner.state;
     _scanner.readChar();
-    _tokens.add(Token(type, _scanner.spanFrom(start)));
+    _tokens.add(Token(type, _scanner.spanFrom(start), preContent: preContent));
   }
 
   /// Produces a [TokenType.alias] or [TokenType.anchor] token.
@@ -772,10 +775,10 @@ class Scanner {
   }
 
   /// Produces a [TokenType.scalar] token with style [ScalarStyle.PLAIN].
-  void _fetchPlainScalar([String toThisToken = '']) {
+  void _fetchPlainScalar({String preContent = ''}) {
     _saveSimpleKey();
     _simpleKeyAllowed = false;
-    _tokens.add(_scanPlainScalar(toThisToken));
+    _tokens.add(_scanPlainScalar(preContent));
   }
 
   /// Eats whitespace and comments until the next token is found.
@@ -802,7 +805,7 @@ class Scanner {
       }
 
       // Eat a comment until a line break.
-      _skipComment();
+      buffer.write(_skipComment());
 
       // If we're at a line break, eat it.
       if (_isBreak) {
@@ -1087,8 +1090,10 @@ class Scanner {
   }
 
   /// Scans a block scalar.
+  /// TODO: retrieves comments.
   Token _scanBlockScalar({bool literal = false}) {
     var start = _scanner.state;
+    var preContentBuffer = StringBuffer();
 
     // Eat the indicator '|' or '>'.
     _scanner.readChar();
@@ -1128,8 +1133,8 @@ class Scanner {
     }
 
     // Eat whitespace and comments to the end of the line.
-    _skipBlanks();
-    _skipComment();
+    preContentBuffer.write(_skipBlanks());
+    preContentBuffer.write(_skipComment());
 
     // Check if we're at the end of the line.
     if (!_isBreakOrEnd) {
@@ -1137,7 +1142,7 @@ class Scanner {
           'Expected comment or line break.', _scanner.emptySpan);
     }
 
-    _skipLine();
+    preContentBuffer.write(_skipLine());
 
     // If the block scalar has an explicit indentation indicator, add that to
     // the current indentation to get the indentation level for the scalar's
@@ -1216,7 +1221,9 @@ class Scanner {
         _scanner.spanFrom(start, end),
         buffer.toString(),
         _scanner.substring(start.position, end.position),
-        literal ? ScalarStyle.LITERAL : ScalarStyle.FOLDED);
+        literal ? ScalarStyle.LITERAL : ScalarStyle.FOLDED,
+        preContentBuffer.toString(),
+        ''); // TODO
   }
 
   /// Scans indentation spaces and line breaks for a block scalar.
@@ -1432,11 +1439,14 @@ class Scanner {
     // Eat the right quote.
     _scanner.readChar();
 
+    // TODO comments?
     return ScalarToken(
         _scanner.spanFrom(start),
         buffer.toString(),
         _scanner.substring(start.position),
-        singleQuote ? ScalarStyle.SINGLE_QUOTED : ScalarStyle.DOUBLE_QUOTED);
+        singleQuote ? ScalarStyle.SINGLE_QUOTED : ScalarStyle.DOUBLE_QUOTED,
+        '',
+        '');
   }
 
   /// Scans a plain scalar.
@@ -1448,13 +1458,18 @@ class Scanner {
     var trailingBreaks = '';
     var whitespace = StringBuffer();
     var indent = _indent + 1;
+    var postContentBuffer = StringBuffer();
 
     while (true) {
       // Check for a document indicator.
       if (_isDocumentIndicator) break;
 
       // Check for a comment.
-      if (_scanner.peekChar() == HASH) break;
+      if (_scanner.peekChar() == HASH) {
+        postContentBuffer.write(whitespace);
+        postContentBuffer.write(_skipComment());
+        break;
+      }
 
       if (_isPlainChar) {
         if (leadingBreak.isNotEmpty) {
@@ -1517,8 +1532,13 @@ class Scanner {
     // Allow a simple key after a plain scalar with leading blanks.
     if (leadingBreak.isNotEmpty) _simpleKeyAllowed = true;
 
-    return ScalarToken(_scanner.spanFrom(start, end), buffer.toString(),
-        _scanner.substring(start.position, end.position), ScalarStyle.PLAIN);
+    return ScalarToken(
+        _scanner.spanFrom(start, end),
+        buffer.toString(),
+        _scanner.substring(start.position, end.position),
+        ScalarStyle.PLAIN,
+        toThisToken,
+        postContentBuffer.toString());
   }
 
   /// Moves past the current line break, if there is one.
@@ -1628,18 +1648,24 @@ class Scanner {
   }
 
   /// Moves the scanner past any blank characters.
-  void _skipBlanks() {
+  String _skipBlanks() {
+    var buffer = StringBuffer();
     while (_isBlank) {
-      _scanner.readChar();
+      buffer.writeCharCode(_scanner.readChar());
     }
+    return buffer.toString();
   }
 
   /// Moves the scanner past a comment, if one starts at the current position.
-  void _skipComment() {
-    if (_scanner.peekChar() != HASH) return;
+  String _skipComment() {
+    if (_scanner.peekChar() != HASH) return '';
+
+    var buffer = StringBuffer();
     while (!_isBreakOrEnd) {
-      _scanner.readChar();
+      buffer.writeCharCode(_scanner.readChar());
     }
+
+    return buffer.toString();
   }
 }
 

@@ -12,9 +12,7 @@ import 'style.dart';
 import 'yaml_node.dart';
 
 /// A wrapper that makes a normal Dart map behave like a [YamlMap].
-class YamlMapWrapper extends MapBase
-    with pkg_collection.UnmodifiableMapMixin
-    implements YamlMap {
+class YamlMapWrapper extends MapBase implements YamlMap {
   @override
   final style = CollectionStyle.ANY;
 
@@ -28,6 +26,12 @@ class YamlMapWrapper extends MapBase
 
   @override
   Map get value => this;
+
+  @override
+  final String postContent = '';
+
+  @override
+  final String preContent = '';
 
   @override
   Iterable get keys => _dartMap.keys;
@@ -55,8 +59,18 @@ class YamlMapWrapper extends MapBase
       other is YamlMapWrapper && other._dartMap == _dartMap;
 
   @override
-  String toPrettyString([int indentationLevel = 0]) {
-    return 'YamlMapWrapper.toPrettyString should not be called!';
+  void operator []=(key, value) {
+    // TODO(walnut): implement []=
+  }
+
+  @override
+  void clear() {
+    _dartMap.clear();
+  }
+
+  @override
+  dynamic remove(Object key) {
+    return _dartMap.remove(key);
   }
 }
 
@@ -69,8 +83,8 @@ class _YamlMapNodes extends MapBase<dynamic, YamlNode>
   final SourceSpan _span;
 
   @override
-  Iterable get keys => _dartMap.keys
-      .map((key) => YamlScalar.internalWithSpan(key, _span, key.toString()));
+  Iterable get keys => _dartMap.keys.map((key) =>
+      YamlScalar.internalWithSpan(key, _span, originalString: key.toString()));
 
   _YamlMapNodes(this._dartMap, this._span);
 
@@ -109,6 +123,12 @@ class YamlListWrapper extends ListBase implements YamlList {
 
   @override
   int get length => _dartList.length;
+
+  @override
+  final String postContent = '';
+
+  @override
+  final String preContent = '';
 
   @override
   set length(int index) {
@@ -186,5 +206,6 @@ class _YamlListNodes extends ListBase<YamlNode> {
 YamlNode _nodeForValue(value, SourceSpan span) {
   if (value is Map) return YamlMapWrapper._(value, span);
   if (value is List) return YamlListWrapper._(value, span);
-  return YamlScalar.internalWithSpan(value, span, value.toString());
+  return YamlScalar.internalWithSpan(value, span,
+      originalString: value.toString());
 }

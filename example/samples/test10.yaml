@@ -1,6 +1,6 @@
-verb: RecommendCafes # comment
+verb: Recommend Cafes # comment
 
-map:
+map: # comment
   a: 
     b: 1
     c: { d: 3, e: 4 }
@@ -9,11 +9,11 @@ list:
   - 2
 recipe:
   - verb: Score
-    outputs: ["DishOffering[]/Scored" , "Dishes"]
+    outputs: [ "DishOffering[]/Scored" , "Dishes" ]
     name: Hotpot
   - verb: Rate
     inputs: Dish
-    outputs: ["DishOffering[]/Rated"]
+    outputs: [ "DishOffering[]/Rated" ]
 tags:
   booleans: [ true, false ] 
   dates:
@@ -43,9 +43,11 @@ tags:
       
   - quoted: "So does this
       quoted scalar.\n"
-  - accomplishment: >
+  - accomplishment: > # comment
       Mark set a major league
       home run record in 1998.
-  - stats: |
+    # a comment
+  - stats: | # comment
       65 Home Runs
       0.278 Batting Average
+    # a comment
