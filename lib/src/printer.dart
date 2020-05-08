@@ -122,18 +122,7 @@ class Printer {
   }
 
   void _loadScalar(YamlScalar scalar) {
-    // TODO(walnut): long strings do not retain their indentation
-    switch (scalar.style) {
-      case ScalarStyle.FOLDED:
-        buffer.write('>\n${scalar.originalString}');
-        break;
-      case ScalarStyle.LITERAL:
-        buffer.write('|\n${scalar.originalString}');
-        break;
-      default:
-        buffer.write('${scalar.originalString}');
-        break;
-    }
+    buffer.write('${scalar.originalString}');
   }
 
   void _loadNode(YamlNode node) {

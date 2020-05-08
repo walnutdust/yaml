@@ -46,8 +46,7 @@ abstract class YamlCollection extends YamlNode {
 }
 
 /// A read-only [Map] parsed from YAML.
-class YamlMap extends YamlCollection
-    with collection.MapMixin, UnmodifiableMapMixin {
+class YamlMap extends YamlCollection with collection.MapMixin {
   /// A view of [this] where the keys and values are guaranteed to be
   /// [YamlNode]s.
   ///
@@ -86,15 +85,29 @@ class YamlMap extends YamlCollection
       YamlMapWrapper(dartMap, sourceUrl);
 
   /// Users of the library should not use this constructor.
-  YamlMap.internal(
-      Map<dynamic, YamlNode> nodes, SourceSpan span, CollectionStyle style)
-      : nodes = UnmodifiableMapView<dynamic, YamlNode>(nodes),
-        super(style) {
+  YamlMap.internal(this.nodes, SourceSpan span, CollectionStyle style)
+      : super(style) {
     _span = span;
   }
 
   @override
   dynamic operator [](key) => nodes[key]?.value;
+
+  @override
+  void operator []=(key, value) {
+    // TODO(walnut)
+    nodes[key] = YamlScalar.wrap(value, value.toString());
+  }
+
+  @override
+  void clear() {
+    nodes.clear();
+  }
+
+  @override
+  remove(Object key) {
+    return nodes.remove(key);
+  }
 }
 
 // TODO(nweiz): Use UnmodifiableListMixin when issue 18970 is fixed.
@@ -189,7 +202,7 @@ class YamlScalar extends YamlNode {
   }
 
   @override
-  String toString() => value.toString();
+  String toString() => '$value';
 }
 
 /// Sets the source span of a [YamlNode].
