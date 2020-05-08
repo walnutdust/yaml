@@ -8,12 +8,12 @@ void main() async {
 
   var sample = File('./example/samples/test10.yaml').readAsStringSync();
   var doc = loadYamlDocument(sample);
-  var docMap = doc.contents as YamlMap;
+  //var docMap = doc.contents as YamlMap;
 
   // pub add
   //docMap['verb'] = 'hello';
 
-  print(doc.toPrettyString());
+  print(doc.dump());
 
   // docMap['verb'] = 'hi';
   // docMap['noun'] = 'he';
@@ -36,6 +36,6 @@ void testOneFile(String path) {
   var sample = File(path).readAsStringSync();
   var docs = loadYamlDocuments(sample);
   docs.forEach((doc) {
-    print(doc.toPrettyString());
+    print(doc.dump());
   });
 }

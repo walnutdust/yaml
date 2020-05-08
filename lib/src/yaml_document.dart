@@ -39,7 +39,7 @@ class YamlDocument {
   @override
   String toString() => contents.toString();
 
-  String toPrettyString() {
+  String dump() {
     // var s = '';
 
     // s = startImplicit ? s : s + '---\n';

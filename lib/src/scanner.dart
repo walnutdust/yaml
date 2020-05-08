@@ -1539,7 +1539,7 @@ class Scanner {
             leadingBreak = _readLine();
             whitespace.clear();
           } else {
-            trailingBreaks += _readLine();
+            trailingBreaks = _readLine();
           }
         }
       }
@@ -1549,6 +1549,9 @@ class Scanner {
         break;
       }
     }
+
+    postContentBuffer.write(leadingBreak);
+    postContentBuffer.write(trailingBreaks);
 
     // Allow a simple key after a plain scalar with leading blanks.
     if (leadingBreak.isNotEmpty) _simpleKeyAllowed = true;

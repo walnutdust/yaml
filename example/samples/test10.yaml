@@ -7,11 +7,14 @@ map: # comment
     # comment
 
     c: { d : 3 , e : 4 } # comment
-    d: 1
+    d: 1 # comment
+
+    # comment
+
     e: 3
 list:
   - 1 # comment
-  
+
   - 2
 recipe:
   - verb: Score # comment
@@ -28,6 +31,7 @@ tags: # comment
     - date: 2002-12-14 # comment
   numbers:
   - int: 12345 # comment
+  # comment
   - negative: -345 # comment
   - floating-point: 345.678 # comment
   - hexidecimal: 0x123abc # comment
@@ -52,7 +56,7 @@ tags: # comment
   - accomplishment: > # comment
       Mark set a major league
       home run record in 1998.
-    # a comment
+  # a comment
   - stats: | # comment
       65 Home Runs
       0.278 Batting Average
