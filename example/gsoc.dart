@@ -15,10 +15,10 @@ void main() async {
 
   print(doc.toPrettyString());
 
-  docMap['verb'] = 'hi';
-  docMap['noun'] = 'he';
-  print('---');
-  print(doc.toPrettyString());
+  // docMap['verb'] = 'hi';
+  // docMap['noun'] = 'he';
+  // print('---');
+  // print(doc.toPrettyString());
 }
 
 void testOneDirectory(String testDirectoryPath) {

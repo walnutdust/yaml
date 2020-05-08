@@ -28,10 +28,10 @@ class YamlMapWrapper extends MapBase implements YamlMap {
   Map get value => this;
 
   @override
-  final String postContent = '';
+  String postContent = '';
 
   @override
-  final String preContent = '';
+  String preContent = '';
 
   @override
   Iterable get keys => _dartMap.keys;
@@ -125,10 +125,10 @@ class YamlListWrapper extends ListBase implements YamlList {
   int get length => _dartList.length;
 
   @override
-  final String postContent = '';
+  String postContent = '';
 
   @override
-  final String preContent = '';
+  String preContent = '';
 
   @override
   set length(int index) {
@@ -162,11 +162,6 @@ class YamlListWrapper extends ListBase implements YamlList {
   @override
   bool operator ==(Object other) =>
       other is YamlListWrapper && other._dartList == _dartList;
-
-  @override
-  String toPrettyString([int indentationLevel = 0]) {
-    return 'YamlListWrapper.toPrettyString should not be called!';
-  }
 }
 
 // TODO(nweiz): Use UnmodifiableListMixin when issue 18970 is fixed.

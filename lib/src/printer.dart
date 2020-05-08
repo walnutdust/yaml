@@ -41,6 +41,14 @@ class Printer {
 
   Printer(this.contents);
 
+  void _loadKey(dynamic key) {
+    // buffer.write('/');
+    if (key is YamlNode) buffer.write(key.preContent);
+    buffer.write(key);
+    if (key is YamlNode) buffer.write(key.postContent);
+    //buffer.write('/');
+  }
+
   void _loadBlockMap(YamlMap map) {
     buffer.write(map.preContent);
     map.nodes.entries.forEach((entry) {
@@ -49,16 +57,15 @@ class Printer {
         var spaces = List.filled(indentation, ' ').join('');
         buffer.write(spaces);
       }
-      buffer.write('${entry.key}:');
-      if (entry.value is YamlCollection &&
-          (entry.value as YamlCollection).style == CollectionStyle.BLOCK) {
+
+      _loadKey(entry.key);
+      buffer.write(':');
+
+      if (entry.value is YamlList &&
+          (entry.value as YamlList).style == CollectionStyle.BLOCK) {
         buffer.write('\n');
       }
       _loadNode(entry.value);
-
-      if (entry.key != map.nodes.entries.last.key) {
-        buffer.write('\n');
-      }
     });
 
     buffer.write(map.postContent);
@@ -69,7 +76,8 @@ class Printer {
     buffer.write('{');
 
     map.nodes.entries.forEach((entry) {
-      buffer.write('${entry.key}:');
+      _loadKey(entry.key);
+      buffer.write(':');
       _loadNode(entry.value);
 
       if (entry.key != map.nodes.entries.last.key) {
@@ -98,7 +106,7 @@ class Printer {
     var spaces = List.filled(indentation, ' ').join('');
 
     list.nodes.forEach((node) {
-      buffer.write('$spaces- ');
+      buffer.write('$spaces-');
       _loadNode(node);
 
       if (node != list.nodes.last) {

@@ -446,7 +446,8 @@ class Parser {
     if (token.type == TokenType.blockEnd) {
       _scanner.scan();
       _state = _states.removeLast();
-      return Event(EventType.mappingEnd, token.span);
+      return Event(EventType.mappingEnd, token.span,
+          postContent: token.postContent);
     }
 
     throw YamlException('Expected a key while parsing a block mapping.',
@@ -524,7 +525,8 @@ class Parser {
 
     _scanner.scan();
     _state = _states.removeLast();
-    return Event(EventType.sequenceEnd, token.span);
+    return Event(EventType.sequenceEnd, token.span,
+        postContent: token.postContent);
   }
 
   /// Parses the productions:
@@ -629,7 +631,8 @@ class Parser {
 
     _scanner.scan();
     _state = _states.removeLast();
-    return Event(EventType.mappingEnd, token.span);
+    return Event(EventType.mappingEnd, token.span,
+        postContent: token.postContent);
   }
 
   /// Parses the productions:

@@ -29,10 +29,13 @@ class Loader {
   FileSpan get span => _span;
   FileSpan _span;
 
+  /// Source of the YAML
+  final String source;
+
   /// Creates a loader that loads [source].
   ///
   /// [sourceUrl] can be a String or a [Uri].
-  Loader(String source, {sourceUrl})
+  Loader(this.source, {sourceUrl})
       : _parser = Parser(source, sourceUrl: sourceUrl) {
     var event = _parser.parse();
     _span = event.span;
@@ -133,7 +136,7 @@ class Loader {
 
     var children = <YamlNode>[];
     var node = YamlList.internal(children, firstEvent.span, firstEvent.style,
-        preContent: firstEvent.preContent, postContent: firstEvent.postContent);
+        preContent: firstEvent.preContent);
     _registerAnchor(firstEvent.anchor, node);
 
     var event = _parser.parse();
@@ -143,6 +146,9 @@ class Loader {
     }
 
     setSpan(node, firstEvent.span.expand(event.span));
+
+    // MARK(walnut): remaking a new node causes test 7.1 Alias Nodes to fail.
+    node.postContent = event.postContent;
     return node;
   }
 
@@ -171,8 +177,12 @@ class Loader {
       event = _parser.parse();
     }
 
-    setSpan(node, firstEvent.span.expand(event.span));
-    return node;
+    // TODO(walnut): There should be a better way to do this
+    var mapNode = YamlMap.internal(
+        children, firstEvent.span.expand(event.span), firstEvent.style,
+        preContent: firstEvent.preContent, postContent: event.postContent);
+
+    return mapNode;
   }
 
   /// Parses a scalar according to its tag name.

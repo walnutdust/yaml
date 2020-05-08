@@ -3,46 +3,52 @@ verb: Recommend Cafes # comment
 map: # comment
   a: 
     b: 1
-    c: { d: 3, e: 4 }
+
+    # comment
+
+    c: { d : 3 , e : 4 } # comment
+    d: 1
+    e: 3
 list:
-  - 1
+  - 1 # comment
+  
   - 2
 recipe:
-  - verb: Score
-    outputs: [ "DishOffering[]/Scored" , "Dishes" ]
-    name: Hotpot
+  - verb: Score # comment
+    outputs: [ "DishOffering[]/Scored" , "Dishes" ] # comment
+    name: Hotpot # comment
   - verb: Rate
-    inputs: Dish
+    inputs: "Dish" # comment
     outputs: [ "DishOffering[]/Rated" ]
-tags:
-  booleans: [ true, false ] 
+tags: # comment
+  booleans: [ true , false ] # comment
   dates:
-    - iso8601: 2001-12-14t21:59:43.10-05:00
-    - spaced: 2001-12-14 21:59:43.10 -5
-    - date: 2002-12-14
+    - iso8601: 2001-12-14t21:59:43.10-05:00 # comment
+    - spaced: 2001-12-14 21:59:43.10 -5 # comment
+    - date: 2002-12-14 # comment
   numbers:
-  - int: 12345
-  - negative: -345
-  - floating-point: 345.678
-  - hexidecimal: 0x123abc
-  - exponential: 12.3015e+02
-  - octal: 0o14
+  - int: 12345 # comment
+  - negative: -345 # comment
+  - floating-point: 345.678 # comment
+  - hexidecimal: 0x123abc # comment
+  - exponential: 12.3015e+02 # comment 
+  - octal: 0o14 # comment
   others:
   - ~
   strings:
-  - unicode: "Sosa did fine.\u263A"
-  - control: "\b1998\t1999\t2000\n"
-  - hex esc: "\x0d\x0a is \r\n"
-  - single: '"Howdy!" he cried.'
-  - quoted: ' # Not a ''comment''.'
-  - tie-fighter: '|\-*-/|'
+  - unicode: "Sosa did fine.\u263A" # comment 
+  - control: "\b1998\t1999\t2000\n" # comment
+  - hex esc: "\x0d\x0a is \r\n" # comment
+  - single: '"Howdy!" he cried.' # comment
+  - quoted: ' # Not a ''comment''.' # comment
+  - tie-fighter: '|\-*-/|' # comment
   - plain: 
       This unquoted scalar
       spans many lines.
 
       
-  - quoted: "So does this
-      quoted scalar.\n"
+  - quoted: "So does this 
+      quoted scalar.\n" # comment
   - accomplishment: > # comment
       Mark set a major league
       home run record in 1998.

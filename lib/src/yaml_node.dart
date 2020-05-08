@@ -36,13 +36,22 @@ abstract class YamlNode {
   /// [YamlList], it will return [this], since they already implement [Map] and
   /// [List], respectively.
   dynamic get value;
+
+  /// The string that occured before this YamlMap
+  String preContent;
+
+  /// The string that occured after this YamlMap
+  String postContent;
+
+  YamlNode(this.preContent, this.postContent);
 }
 
 abstract class YamlCollection extends YamlNode {
   /// The style used for the map in the original document.
   final CollectionStyle style;
 
-  YamlCollection(this.style);
+  YamlCollection(this.style, [String preContent = '', String postContent = ''])
+      : super(preContent, postContent);
 }
 
 /// A read-only [Map] parsed from YAML.
@@ -56,12 +65,6 @@ class YamlMap extends YamlCollection with collection.MapMixin {
   /// a map from a [YamlScalar] to a [YamlList], but since the key type is
   /// `dynamic` `map.nodes["foo"]` will still work.
   final Map<dynamic, YamlNode> nodes;
-
-  /// The string that occured before this YamlMap
-  final String preContent;
-
-  /// The string that occured after this YamlMap
-  final String postContent;
 
   @override
   Map get value => this;
@@ -92,8 +95,8 @@ class YamlMap extends YamlCollection with collection.MapMixin {
 
   /// Users of the library should not use this constructor.
   YamlMap.internal(this.nodes, SourceSpan span, CollectionStyle style,
-      {this.preContent = '', this.postContent = ''})
-      : super(style) {
+      {String preContent = '', String postContent = ''})
+      : super(style, preContent, postContent) {
     _span = span;
   }
 
@@ -140,12 +143,6 @@ class YamlList extends YamlCollection with collection.ListMixin {
   @override
   int get length => nodes.length;
 
-  /// The string that occured before this YamlMap
-  final String preContent;
-
-  /// The string that occured after this YamlMap
-  final String postContent;
-
   @override
   set length(int index) {
     throw UnsupportedError('Cannot modify an unmodifiable List');
@@ -175,9 +172,9 @@ class YamlList extends YamlCollection with collection.ListMixin {
   /// Users of the library should not use this constructor.
   YamlList.internal(
       List<YamlNode> nodes, SourceSpan span, CollectionStyle style,
-      {this.preContent = '', this.postContent = ''})
+      {String preContent = '', String postContent = ''})
       : nodes = UnmodifiableListView<YamlNode>(nodes),
-        super(style) {
+        super(style, preContent, postContent) {
     _span = span;
   }
 
@@ -201,12 +198,6 @@ class YamlScalar extends YamlNode {
   /// The original string used to derive the [YamlScalar].
   final String originalString;
 
-  /// The string that occured before this YamlScalar
-  final String preContent;
-
-  /// The string that occured after this YamlScalar
-  final String postContent;
-
   /// Wraps a Dart value in a [YamlScalar].
   ///
   /// This scalar's [span] won't have useful location information. However, it
@@ -216,8 +207,7 @@ class YamlScalar extends YamlNode {
   /// [sourceUrl] may be either a [String], a [Uri], or `null`.
   YamlScalar.wrap(this.value, this.originalString, {sourceUrl})
       : style = ScalarStyle.ANY,
-        preContent = '',
-        postContent = '' {
+        super('', '') {
     _span = NullSpan(sourceUrl);
   }
 
@@ -225,8 +215,7 @@ class YamlScalar extends YamlNode {
   YamlScalar.internal(this.value, ScalarEvent scalar)
       : style = scalar.style,
         originalString = scalar.rawContent,
-        preContent = scalar.preContent,
-        postContent = scalar.postContent {
+        super(scalar.preContent, scalar.postContent) {
     _span = scalar.span;
   }
 
@@ -234,8 +223,9 @@ class YamlScalar extends YamlNode {
   YamlScalar.internalWithSpan(this.value, SourceSpan span,
       {this.originalString = '',
       this.style = ScalarStyle.ANY,
-      this.preContent = '',
-      this.postContent = ''}) {
+      String preContent = '',
+      String postContent = ''})
+      : super(preContent, postContent) {
     _span = span;
   }
 

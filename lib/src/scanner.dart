@@ -406,10 +406,10 @@ class Scanner {
         _fetchTag();
         return;
       case SINGLE_QUOTE:
-        _fetchFlowScalar(singleQuote: true);
+        _fetchFlowScalar(singleQuote: true, preContent: skippedString);
         return;
       case DOUBLE_QUOTE:
-        _fetchFlowScalar(singleQuote: false);
+        _fetchFlowScalar(singleQuote: false, preContent: skippedString);
         return;
       case VERTICAL_BAR:
         if (!_inBlockContext) _invalidScalarCharacter();
@@ -644,7 +644,17 @@ class Scanner {
     _removeSimpleKey();
     _decreaseFlowLevel();
     _simpleKeyAllowed = false;
-    _addCharToken(type);
+
+    // MARK(walnut): uses a variant on addCharToken.
+    var start = _scanner.state;
+    _scanner.readChar();
+
+    var postContentBuffer = StringBuffer();
+    postContentBuffer.write(_skipBlanks());
+    postContentBuffer.write(_skipComment());
+
+    _tokens.add(Token(type, _scanner.spanFrom(start),
+        postContent: postContentBuffer.toString()));
   }
 
   /// Produces a [TokenType.flowEntry] token.
@@ -737,10 +747,11 @@ class Scanner {
 
   /// Adds a token with [type] to [_tokens].
   ///
-  /// The span of the new token is the current character.
+  /// The span of the new token is the current character with any postContent.
   void _addCharToken(TokenType type, {String preContent = ''}) {
     var start = _scanner.state;
     _scanner.readChar();
+
     _tokens.add(Token(type, _scanner.spanFrom(start), preContent: preContent));
   }
 
@@ -768,10 +779,11 @@ class Scanner {
 
   /// Produces a [TokenType.scalar] token with style [ScalarStyle.SINGLE_QUOTED]
   /// or [ScalarStyle.DOUBLE_QUOTED].
-  void _fetchFlowScalar({bool singleQuote = false}) {
+  void _fetchFlowScalar({bool singleQuote = false, String preContent = ''}) {
     _saveSimpleKey();
     _simpleKeyAllowed = false;
-    _tokens.add(_scanFlowScalar(singleQuote: singleQuote));
+    _tokens
+        .add(_scanFlowScalar(singleQuote: singleQuote, preContent: preContent));
   }
 
   /// Produces a [TokenType.scalar] token with style [ScalarStyle.PLAIN].
@@ -1262,7 +1274,7 @@ class Scanner {
   }
 
   // Scans a quoted scalar.
-  Token _scanFlowScalar({bool singleQuote = false}) {
+  Token _scanFlowScalar({bool singleQuote = false, String preContent = ''}) {
     var start = _scanner.state;
     var buffer = StringBuffer();
 
@@ -1439,14 +1451,23 @@ class Scanner {
     // Eat the right quote.
     _scanner.readChar();
 
-    // TODO comments?
+    // Save the end state.
+    var end = _scanner.state;
+
+    // Eat the remaining spaces and comments
+    var postContentBuffer = StringBuffer();
+    while (_isBlank) {
+      postContentBuffer.writeCharCode(_scanner.readChar());
+    }
+    postContentBuffer.write(_skipComment());
+
     return ScalarToken(
         _scanner.spanFrom(start),
         buffer.toString(),
-        _scanner.substring(start.position),
+        _scanner.substring(start.position, end.position),
         singleQuote ? ScalarStyle.SINGLE_QUOTED : ScalarStyle.DOUBLE_QUOTED,
-        '',
-        '');
+        preContent,
+        postContentBuffer.toString());
   }
 
   /// Scans a plain scalar.
@@ -1518,7 +1539,7 @@ class Scanner {
             leadingBreak = _readLine();
             whitespace.clear();
           } else {
-            trailingBreaks = _readLine();
+            trailingBreaks += _readLine();
           }
         }
       }
