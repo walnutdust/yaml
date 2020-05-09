@@ -1,5 +1,7 @@
-list:
-  - [2,1] # comment
-  - 2
-  - "hi" # comment
-  - 3
+- [2,1] # comment
+
+# comment
+
+- 2
+- "hi" # comment
+- 3

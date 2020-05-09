@@ -212,11 +212,10 @@ map: # comment
             equals('- "1" # comment\n- 2\n- 3'));
       });
 
-      // TODO(walnut): not yet able to read comments between array elements
-      // test('simple block (3)', () {
-      //   expect(loadYamlDocument('- 1\n- 2\n# comment\n- 3').dump(),
-      //       equals('- 1\n- 2\n- 3'));
-      // });
+      test('simple block with comments (3)', () {
+        expect(loadYamlDocument('- 1\n- 2\n# comment\n- 3').dump(),
+            equals('- 1\n- 2\n# comment\n- 3'));
+      });
 
       test('simple flow', () {
         expect(loadYamlDocument('[1]').dump(), equals('[1]'));
