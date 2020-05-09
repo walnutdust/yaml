@@ -128,7 +128,16 @@ class YamlMap extends YamlCollection with collection.MapMixin {
 
   @override
   dynamic remove(Object key) {
-    return nodes.remove(key);
+    //   print('----!!');
+    //   print(nodes.keys);
+    //   print(nodes.keys.map((e) => e.toString()).toList().indexOf(key.toString()));
+
+    var prevNode = nodes.remove(key);
+    // print('/${prevNode.preContent}/');
+    // print('/${prevNode.postContent}/');
+    // print('!!----');
+
+    return prevNode;
   }
 }
 

@@ -230,8 +230,6 @@ map: # comment
             equals('[1, 2] # comment'));
       });
     });
-
-    // TODO (walnut): Adds additional newline if map value is list with scalar first element
     group('map-array', () {
       test('', () {
         expect(loadYamlDocument('''
@@ -260,6 +258,52 @@ recipe:
   - verb: Rate
     inputs: "Dish" # comment
     outputs: [ "DishOffering[]/Rated" ]'''));
+      });
+    });
+
+    group('complex', () {
+      test('yaml pubspec', () {
+        expect(loadYamlDocument('''
+name: yaml
+version: 2.2.1-dev
+
+description: A parser for YAML, a human-friendly data serialization standard
+homepage: https://github.com/dart-lang/yaml
+
+environment:
+  sdk: '>=2.4.0 <3.0.0'
+
+dependencies:
+  charcode: ^1.1.0
+  collection: '>=1.1.0 <2.0.0'
+  string_scanner: '>=0.1.4 <2.0.0'
+  source_span: '>=1.0.0 <2.0.0'
+  indent: ^1.0.0+2
+
+dev_dependencies:
+  pedantic: ^1.0.0
+  path: '>=1.2.0 <2.0.0'
+  test: '>=0.12.0 <2.0.0\'''').dump(), equals('''
+name: yaml
+version: 2.2.1-dev
+
+description: A parser for YAML, a human-friendly data serialization standard
+homepage: https://github.com/dart-lang/yaml
+
+environment:
+  sdk: '>=2.4.0 <3.0.0'
+
+dependencies:
+  charcode: ^1.1.0
+  collection: '>=1.1.0 <2.0.0'
+  string_scanner: '>=0.1.4 <2.0.0'
+  source_span: '>=1.0.0 <2.0.0'
+  indent: ^1.0.0+2
+
+dev_dependencies:
+  pedantic: ^1.0.0
+  path: '>=1.2.0 <2.0.0'
+  test: '>=0.12.0 <2.0.0\''''));
       });
     });
   });

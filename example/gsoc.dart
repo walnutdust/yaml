@@ -1,42 +1,30 @@
-import 'dart:io';
+import 'package:yaml/spec.dart';
 
-import 'package:yaml/yaml.dart';
-
-void main() async {
+void main() {
   // testOneDirectory('./example/samples/');
   // testOneFile('./example/samples/test10.yaml');
 
-  var sample = File('./example/samples/test11.yaml').readAsStringSync();
-  var doc = loadYamlDocument(sample);
-  //var docMap = doc.contents as YamlMap;
+  var spec = Spec.load(fileName: './example/samples/sample-pubspec.yaml');
+  spec.versionBumpMinor();
+
+  // Simple modification:
+  spec['name'] = 'yaml-gsoc';
 
   // pub add
-  //docMap['verb'] = 'hello';
+  // docMap['dependencies']['gsoc'] = '2.0.20';
 
-  print(doc.dump());
-  print(doc.contents);
+  // pub upgrade
+  spec['dependencies']['charcode'] = '^1.2.1';
 
-  // docMap['verb'] = 'hi';
-  // docMap['noun'] = 'he';
-  // print('---');
-  // print(doc.toPrettyString());
+  // pub remove
+  (spec['dependencies'] as Map).remove('source_span');
+
+  print(spec.dump());
+
+  print('---');
+
+  (spec['dependencies'] as Map).remove('indent');
+  print(spec.dump());
 }
 
-void testOneDirectory(String testDirectoryPath) {
-  var testDirectory = Directory(testDirectoryPath);
-
-  var testFiles = testDirectory.list(recursive: false, followLinks: false);
-  var testSamples = testFiles.map((file) => file.path);
-
-  testSamples.forEach((path) {
-    testOneFile(path);
-  });
-}
-
-void testOneFile(String path) {
-  var sample = File(path).readAsStringSync();
-  var docs = loadYamlDocuments(sample);
-  docs.forEach((doc) {
-    print(doc.dump());
-  });
-}
+void pubVersion() {}
