@@ -137,6 +137,10 @@ Mark set a major league
             equals('foo: bar # comment\nbar: baz'));
       });
 
+      test('simple block with comments (2)', () {
+        expect(loadYamlDocument('foo: "bar" # comment\nbar: baz').dump(),
+            equals('foo: "bar" # comment\nbar: baz'));
+      });
       test('nested block with comments', () {
         expect(loadYamlDocument('a: # comment\n  b:\n    c: 2').dump(),
             equals('a: # comment\n  b:\n    c: 2'));
@@ -193,12 +197,20 @@ map: # comment
         expect(loadYamlDocument('- 1').dump(), equals('- 1'));
       });
 
-      // TODO(walnut): this had one extra new line each. this happens only if the
-      // array is at the base of the document.
-      // test('simple block (2)', () {
-      //   expect(
-      //       loadYamlDocument('- 1\n- 2\n- 3').dump(), equals('- 1\n- 2\n- 3'));
-      // });
+      test('simple block (2)', () {
+        expect(
+            loadYamlDocument('- 1\n- 2\n- 3').dump(), equals('- 1\n- 2\n- 3'));
+      });
+
+      test('simple block with comments', () {
+        expect(loadYamlDocument('- 1 # comment\n- 2\n- 3').dump(),
+            equals('- 1 # comment\n- 2\n- 3'));
+      });
+
+      test('simple block with comments (2)', () {
+        expect(loadYamlDocument('- "1" # comment\n- 2\n- 3').dump(),
+            equals('- "1" # comment\n- 2\n- 3'));
+      });
 
       // TODO(walnut): not yet able to read comments between array elements
       // test('simple block (3)', () {
@@ -220,12 +232,15 @@ map: # comment
       });
     });
 
+    // TODO (walnut): Adds additional newline if map value is list with scalar first element
     group('map-array', () {
       test('', () {
         expect(loadYamlDocument('''
 list:
-  - 1 # comment
+  - [2,1] # comment
   - 2
+  - "hi" # comment
+  - 3
 recipe:
   - verb: Score # comment
     outputs: [ "DishOffering[]/Scored" , "Dishes" ] # comment
@@ -235,8 +250,10 @@ recipe:
     outputs: [ "DishOffering[]/Rated" ]
 ''').dump(), equals('''
 list:
-  - 1 # comment
+  - [2,1] # comment
   - 2
+  - "hi" # comment
+  - 3
 recipe:
   - verb: Score # comment
     outputs: [ "DishOffering[]/Scored" , "Dishes" ] # comment

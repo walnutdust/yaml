@@ -245,7 +245,10 @@ class Parser {
   ///                                                                   ******
   ///     flow_content         ::= flow_collection | SCALAR
   ///                                                ******
-  Event _parseNode({bool block = false, bool indentlessSequence = false}) {
+  Event _parseNode(
+      {bool block = false,
+      bool indentlessSequence = false,
+      String preContent = ''}) {
     var token = _scanner.peek();
 
     if (token is AliasToken) {
@@ -303,10 +306,12 @@ class Parser {
 
       _state = _states.removeLast();
       _scanner.scan();
+
       return ScalarEvent(span.expand(token.span), token.value, token.style,
           anchor: anchor,
           tag: tag,
           rawContent: token.rawContent,
+          prePreContent: preContent,
           preContent: token.preContent,
           postContent: token.postContent);
     }
@@ -359,6 +364,8 @@ class Parser {
     var token = _scanner.peek();
 
     if (token.type == TokenType.blockEntry) {
+      var blockEntryToken = token;
+
       token = _scanner.advance();
 
       if (token.type == TokenType.blockEntry ||
@@ -367,7 +374,7 @@ class Parser {
         return _processEmptyScalar(token.span.end);
       } else {
         _states.add(_State.BLOCK_SEQUENCE_ENTRY);
-        return _parseNode(block: true);
+        return _parseNode(block: true, preContent: blockEntryToken.preContent);
       }
     }
 

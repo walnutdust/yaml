@@ -198,6 +198,8 @@ class YamlScalar extends YamlNode {
   /// The original string used to derive the [YamlScalar].
   final String originalString;
 
+  final String prePreContent;
+
   /// Wraps a Dart value in a [YamlScalar].
   ///
   /// This scalar's [span] won't have useful location information. However, it
@@ -207,6 +209,7 @@ class YamlScalar extends YamlNode {
   /// [sourceUrl] may be either a [String], a [Uri], or `null`.
   YamlScalar.wrap(this.value, this.originalString, {sourceUrl})
       : style = ScalarStyle.ANY,
+        prePreContent = '',
         super('', '') {
     _span = NullSpan(sourceUrl);
   }
@@ -215,6 +218,7 @@ class YamlScalar extends YamlNode {
   YamlScalar.internal(this.value, ScalarEvent scalar)
       : style = scalar.style,
         originalString = scalar.rawContent,
+        prePreContent = scalar.prePreContent,
         super(scalar.preContent, scalar.postContent) {
     _span = scalar.span;
   }
@@ -225,7 +229,8 @@ class YamlScalar extends YamlNode {
       this.style = ScalarStyle.ANY,
       String preContent = '',
       String postContent = ''})
-      : super(preContent, postContent) {
+      : prePreContent = '',
+        super(preContent, postContent) {
     _span = span;
   }
 

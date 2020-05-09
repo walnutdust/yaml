@@ -42,11 +42,11 @@ class Printer {
   Printer(this.contents);
 
   void _loadKey(dynamic key) {
-    // buffer.write('/');
-    if (key is YamlNode) buffer.write(key.preContent);
-    buffer.write(key);
-    if (key is YamlNode) buffer.write(key.postContent);
-    //buffer.write('/');
+    if (key is YamlNode) {
+      _loadNode(key);
+    } else {
+      buffer.write(key);
+    }
   }
 
   void _loadBlockMap(YamlMap map) {
@@ -106,12 +106,13 @@ class Printer {
     var spaces = List.filled(indentation, ' ').join('');
 
     list.nodes.forEach((node) {
-      buffer.write('$spaces-');
-      _loadNode(node);
-
-      if (node != list.nodes.last) {
-        buffer.write('\n');
+      if (node is YamlScalar && node.prePreContent.isNotEmpty) {
+        buffer.write(node.prePreContent);
+      } else {
+        buffer.write(spaces);
       }
+      buffer.write('-');
+      _loadNode(node);
     });
     buffer.write(list.postContent);
   }

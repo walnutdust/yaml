@@ -351,7 +351,6 @@ class Scanner {
     // MARK(walnut): Grab comments and newlines to the next token to pass it.
     var skippedString = _scanToNextToken();
     _staleSimpleKeys();
-
     _unrollIndent(_scanner.column);
 
     if (_scanner.isDone) {
@@ -430,7 +429,7 @@ class Scanner {
         if (_isPlainCharAt(1)) {
           _fetchPlainScalar(preContent: skippedString);
         } else {
-          _fetchBlockEntry();
+          _fetchBlockEntry(preContent: skippedString);
         }
         return;
       case QUESTION:
@@ -665,7 +664,7 @@ class Scanner {
   }
 
   /// Produces a [TokenType.blockEntry] token.
-  void _fetchBlockEntry() {
+  void _fetchBlockEntry({String preContent = ''}) {
     if (_inBlockContext) {
       if (!_simpleKeyAllowed) {
         throw YamlException(
@@ -682,7 +681,7 @@ class Scanner {
 
     _removeSimpleKey();
     _simpleKeyAllowed = true;
-    _addCharToken(TokenType.blockEntry);
+    _addCharToken(TokenType.blockEntry, preContent: preContent);
   }
 
   /// Produces the [TokenType.key] token.
@@ -1277,6 +1276,7 @@ class Scanner {
   Token _scanFlowScalar({bool singleQuote = false, String preContent = ''}) {
     var start = _scanner.state;
     var buffer = StringBuffer();
+    var leadingBlanks = false;
 
     // Eat the left quote.
     _scanner.readChar();
@@ -1292,7 +1292,7 @@ class Scanner {
         throw YamlException('Unexpected end of file.', _scanner.emptySpan);
       }
 
-      var leadingBlanks = false;
+      leadingBlanks = false;
       while (!_isBlankOrEnd) {
         var char = _scanner.peekChar();
         if (singleQuote &&
@@ -1489,6 +1489,33 @@ class Scanner {
       if (_scanner.peekChar() == HASH) {
         postContentBuffer.write(whitespace);
         postContentBuffer.write(_skipComment());
+
+        // MARK(walnut): this is a repeat of the code below - see if refactoring is possible
+        while (_isBlank || _isBreak) {
+          if (_isBlank) {
+            // Check for a tab character messing up the intendation.
+            if (leadingBreak.isNotEmpty &&
+                _scanner.column < indent &&
+                _scanner.peekChar() == TAB) {
+              _scanner.error('Expected a space but found a tab.', length: 1);
+            }
+
+            if (leadingBreak.isEmpty) {
+              whitespace.writeCharCode(_scanner.readChar());
+            } else {
+              _scanner.readChar();
+            }
+          } else {
+            // Check if it's a first line break.
+            if (leadingBreak.isEmpty) {
+              leadingBreak = _readLine();
+              whitespace.clear();
+            } else {
+              trailingBreaks = _readLine();
+            }
+          }
+        }
+
         break;
       }
 

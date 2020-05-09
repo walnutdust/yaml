@@ -128,6 +128,8 @@ class ScalarEvent extends _ValueEvent {
   @override
   final String postContent;
 
+  final String prePreContent;
+
   /// The contents of the scalar.
   final String value;
 
@@ -141,6 +143,7 @@ class ScalarEvent extends _ValueEvent {
       {this.anchor,
       this.tag,
       this.rawContent,
+      this.prePreContent = '',
       this.preContent = '',
       this.postContent = ''});
 

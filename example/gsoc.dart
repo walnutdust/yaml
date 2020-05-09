@@ -6,7 +6,7 @@ void main() async {
   // testOneDirectory('./example/samples/');
   // testOneFile('./example/samples/test10.yaml');
 
-  var sample = File('./example/samples/test10.yaml').readAsStringSync();
+  var sample = File('./example/samples/test11.yaml').readAsStringSync();
   var doc = loadYamlDocument(sample);
   //var docMap = doc.contents as YamlMap;
 
@@ -14,6 +14,7 @@ void main() async {
   //docMap['verb'] = 'hello';
 
   print(doc.dump());
+  print(doc.contents);
 
   // docMap['verb'] = 'hi';
   // docMap['noun'] = 'he';
