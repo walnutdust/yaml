@@ -6,6 +6,7 @@ import 'dart:collection' as collection;
 
 import 'package:collection/collection.dart';
 import 'package:source_span/source_span.dart';
+import 'package:yaml/yaml.dart';
 
 import 'event.dart';
 import 'null_span.dart';
@@ -117,27 +118,93 @@ class YamlMap extends YamlCollection with collection.MapMixin {
 
       nodes[key] = updatedScalar;
     } else {
-      nodes[key] = YamlScalar.wrap(value, value.toString());
+      // Default values for pre/post contents of key/value pair.
+      var preContent = '\n';
+      var postContent = '\n';
+
+      // if the map is not empty, we can inherit the indentation
+      // and post content from the last node
+      if (nodes.isNotEmpty) {
+        var lastEntry = nodes.entries.last;
+
+        var lastKeyNode = (lastEntry.key as YamlNode);
+        var lastValueNode = lastEntry.value;
+
+        var lastNodePreContent = lastKeyNode.preContent;
+        var lastNodePostContent = lastValueNode.postContent;
+
+        // To get the indentation, find the last \n and work from there.
+        var newLineIndex = lastNodePreContent.lastIndexOf('\n');
+        if (newLineIndex != -1 &&
+            newLineIndex < lastNodePreContent.length - 1) {
+          preContent += lastNodePreContent.substring(newLineIndex + 1);
+        }
+
+        // We only want to inherit the post content if it is empty or is just spaces
+        var trimmedString = lastNodePostContent.trimRight();
+        if (trimmedString.isNotEmpty) {
+          var lastChar = trimmedString[trimmedString.length - 1];
+          var index = trimmedString.lastIndexOf(lastChar) + 1; //susss
+          postContent = lastNodePostContent.substring(index);
+        }
+
+        lastValueNode.postContent = trimmedString;
+      }
+
+      // Turn them into YamlScalars. Note the spans here are not really helpful.
+      var keyScalar = YamlScalar.internalWithSpan(
+        key,
+        NullSpan(key.toString()),
+        originalString: key.toString(),
+        style: ScalarStyle.PLAIN,
+        preContent: preContent,
+      );
+      var valueScalar = YamlScalar.internalWithSpan(
+        value,
+        NullSpan(value.toString()),
+        originalString: value.toString(),
+        style: ScalarStyle.PLAIN,
+        preContent: ' ',
+        postContent: postContent,
+      );
+
+      nodes[keyScalar] = valueScalar;
     }
   }
 
   @override
-  void clear() {
-    nodes.clear();
-  }
+  void clear() => nodes.clear();
 
   @override
   dynamic remove(Object key) {
-    //   print('----!!');
-    //   print(nodes.keys);
-    //   print(nodes.keys.map((e) => e.toString()).toList().indexOf(key.toString()));
+    var keyList = nodes.keys.toList();
+    var keyNameList = nodes.keys.map((e) => e.toString()).toList();
+    var index = keyNameList.indexOf(key.toString());
 
-    var prevNode = nodes.remove(key);
-    // print('/${prevNode.preContent}/');
-    // print('/${prevNode.postContent}/');
-    // print('!!----');
+    // Note that this removal should not affect keyList
+    var node = nodes.remove(key);
 
-    return prevNode;
+    // If there is a node beside it, we can "pass along" the pre/post contents.
+    if (keyList.length > 1) {
+      var nodeMeta = node.preContent;
+      var newLineIndex = node.postContent.indexOf('\n');
+
+      // ?(walnut): This assumes that we do not want comments on the same line.
+      nodeMeta +=
+          newLineIndex >= 0 && newLineIndex < node.postContent.length - 1
+              ? node.postContent.substring(newLineIndex)
+              : '';
+
+      if (index == keyList.length - 1) {
+        var prevNode = nodes[keyNameList[index - 1]];
+        prevNode.postContent = prevNode.postContent + nodeMeta;
+      } else {
+        var nextNode = (keyList[index + 1] as YamlNode);
+        nextNode.preContent = nodeMeta + nextNode.preContent;
+      }
+    }
+
+    return node;
   }
 }
 

@@ -6,7 +6,7 @@ import 'yaml.dart';
 class Spec with collection.MapMixin {
   final YamlDocument _document;
 
-  Map contents;
+  YamlMap contents;
 
   Spec.load({String fileName})
       : this(yamlString: File(fileName).readAsStringSync());
@@ -15,11 +15,40 @@ class Spec with collection.MapMixin {
     contents = (_document.contents as YamlMap);
   }
 
+  /// Upgrades a dependency to the new version constraint.
+  void upgrade(String dependencyName, String versionConstraint,
+      {bool dev = false}) {
+    if (dev) {
+      contents['dev-dependencies'][dependencyName] = versionConstraint;
+    } else {
+      contents['dependencies'][dependencyName] = versionConstraint;
+    }
+  }
+
+  /// Removes a dependency from the file.
+  void removeDependency(String dependencyName, {bool dev = false}) {
+    if (dev) {
+      contents['dev-dependencies'].remove(dependencyName);
+    } else {
+      contents['dependencies'].remove(dependencyName);
+    }
+  }
+
+  void addDependency(String dependencyName, String versionConstraint,
+      {bool dev = false}) {
+    if (dev) {
+      contents['dev-dependencies'][dependencyName] = versionConstraint;
+    } else {
+      contents['dependencies'][dependencyName] = versionConstraint;
+    }
+  }
+
   void versionBumpMajor() => versionBump(Version.major);
   void versionBumpMinor() => versionBump(Version.minor);
   void versionBumpPatch() => versionBump(Version.patch);
 
   /// Updates the version on the pubsec file, assuming semantic versioning.
+  /// https://semver.org/
   /// <valid semver> ::= <version core>
   ///                  | <version core> "-" <pre-release>
   ///                  | <version core> "+" <build>
