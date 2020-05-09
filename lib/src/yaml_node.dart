@@ -152,14 +152,19 @@ class YamlMap extends YamlCollection with collection.MapMixin {
 
   @override
   void operator []=(key, value) {
-    // TODO(walnut)
+    // TODO(walnut): Can only update to scalar at the moment.
     if (nodes.containsKey(key)) {
-      var currScalar = (nodes[key] as YamlScalar);
-      var updatedScalar = YamlScalar.internalWithSpan(value, currScalar.span,
+      var valueNode = nodes[key];
+
+      var style = valueNode is YamlScalar ? valueNode.style : ScalarStyle.PLAIN;
+      var preContent =
+          valueNode.preContent.isEmpty ? ' ' : valueNode.preContent;
+
+      var updatedScalar = YamlScalar.internalWithSpan(value, valueNode.span,
           originalString: value.toString(),
-          style: currScalar.style,
-          preContent: currScalar.preContent,
-          postContent: currScalar.postContent);
+          style: style,
+          preContent: preContent,
+          postContent: valueNode.postContent);
 
       nodes[key] = updatedScalar;
     } else {
