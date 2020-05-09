@@ -1,4 +1,5 @@
 import 'package:yaml/src/style.dart';
+import 'package:yaml/src/yaml_node_wrapper.dart';
 
 import 'yaml_node.dart';
 
@@ -166,13 +167,15 @@ class Printer {
         _loadScalar(node as YamlScalar);
         break;
       case YamlList:
+      case YamlListWrapper:
         _loadList(node as YamlList);
         break;
       case YamlMap:
+      case YamlMapWrapper:
         _loadMap(node as YamlMap);
         break;
       default:
-        buffer.write('${node.runtimeType}');
+        buffer.write('_loadNode called with ${node.runtimeType}');
         break;
     }
 

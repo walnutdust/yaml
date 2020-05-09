@@ -18,4 +18,6 @@ class NullSpan extends SourceSpanMixin {
   final text = '';
 
   NullSpan(sourceUrl) : start = SourceLocation(0, sourceUrl: sourceUrl);
+
+  factory NullSpan.emptySpan() => NullSpan('');
 }

@@ -45,6 +45,22 @@ abstract class YamlNode {
   String postContent;
 
   YamlNode(this.preContent, this.postContent);
+
+  static YamlNode from(dynamic value,
+      {String preContent = '',
+      String postContent = '',
+      String indentation = ''}) {
+    if (value is Map) {
+      return YamlMap.from(value,
+          style: CollectionStyle.BLOCK,
+          postContent: postContent,
+          indentation: indentation);
+    }
+
+    return YamlScalar.internalWithSpan(value, NullSpan.emptySpan(),
+        preContent: preContent, postContent: postContent);
+    // TODO(walnut): add list case
+  }
 }
 
 abstract class YamlCollection extends YamlNode {
@@ -94,6 +110,36 @@ class YamlMap extends YamlCollection with collection.MapMixin {
   factory YamlMap.wrap(Map dartMap, {sourceUrl}) =>
       YamlMapWrapper(dartMap, sourceUrl);
 
+  /// Like YamlMap.wrap, wraps a Dart map so it can be accessed recursively like a
+  /// [YamlMap].
+  ///
+  /// Unlike YamlMap.wrap, the nodes are full fledged YamlNodes with meaningful
+  /// preContent and postContent values. [SourceSpan]s are however still dummies.
+  YamlMap.from(Map dartMap,
+      {CollectionStyle style = CollectionStyle.ANY,
+      String preContent = '',
+      String postContent = '',
+      String indentation = ''})
+      : nodes = {},
+        super(style, preContent, postContent) {
+    _span = NullSpan.emptySpan();
+    var entries = dartMap.entries;
+
+    entries.forEach((entry) {
+      var key = entry.key;
+      var value = entry.value;
+
+      var keyScalar = YamlScalar.internalWithSpan(
+        key,
+        NullSpan.emptySpan(),
+        preContent: '\n    $indentation',
+      );
+
+      nodes[keyScalar] =
+          YamlNode.from(value, preContent: ' ', indentation: '  ');
+    });
+  }
+
   /// Users of the library should not use this constructor.
   YamlMap.internal(this.nodes, SourceSpan span, CollectionStyle style,
       {String preContent = '', String postContent = ''})
@@ -107,7 +153,6 @@ class YamlMap extends YamlCollection with collection.MapMixin {
   @override
   void operator []=(key, value) {
     // TODO(walnut)
-
     if (nodes.containsKey(key)) {
       var currScalar = (nodes[key] as YamlScalar);
       var updatedScalar = YamlScalar.internalWithSpan(value, currScalar.span,
@@ -142,10 +187,9 @@ class YamlMap extends YamlCollection with collection.MapMixin {
 
         // We only want to inherit the post content if it is empty or is just spaces
         var trimmedString = lastNodePostContent.trimRight();
-        if (trimmedString.isNotEmpty) {
-          var lastChar = trimmedString[trimmedString.length - 1];
-          var index = trimmedString.lastIndexOf(lastChar) + 1; //susss
-          postContent = lastNodePostContent.substring(index);
+        if (trimmedString.isNotEmpty &&
+            trimmedString.length != postContent.length) {
+          postContent = lastNodePostContent.substring(trimmedString.length);
         }
 
         lastValueNode.postContent = trimmedString;
@@ -155,20 +199,20 @@ class YamlMap extends YamlCollection with collection.MapMixin {
       var keyScalar = YamlScalar.internalWithSpan(
         key,
         NullSpan(key.toString()),
-        originalString: key.toString(),
-        style: ScalarStyle.PLAIN,
         preContent: preContent,
       );
-      var valueScalar = YamlScalar.internalWithSpan(
-        value,
-        NullSpan(value.toString()),
-        originalString: value.toString(),
-        style: ScalarStyle.PLAIN,
-        preContent: ' ',
-        postContent: postContent,
-      );
 
-      nodes[keyScalar] = valueScalar;
+      if (value is Map) {
+        nodes[keyScalar] = YamlMap.from(value,
+            style: CollectionStyle.BLOCK, postContent: '\n$postContent');
+      } else {
+        nodes[keyScalar] = YamlScalar.internalWithSpan(
+          value,
+          NullSpan(value.toString()),
+          preContent: ' ',
+          postContent: postContent,
+        );
+      }
     }
   }
 
@@ -208,7 +252,6 @@ class YamlMap extends YamlCollection with collection.MapMixin {
   }
 }
 
-// TODO(nweiz): Use UnmodifiableListMixin when issue 18970 is fixed.
 /// A read-only [List] parsed from YAML.
 class YamlList extends YamlCollection with collection.ListMixin {
   final List<YamlNode> nodes;
@@ -301,11 +344,13 @@ class YamlScalar extends YamlNode {
 
   /// Users of the library should not use this constructor.
   YamlScalar.internalWithSpan(this.value, SourceSpan span,
-      {this.originalString = '',
-      this.style = ScalarStyle.ANY,
+      {String originalString = '',
+      this.style = ScalarStyle.PLAIN,
       String preContent = '',
       String postContent = ''})
       : prePreContent = '',
+        originalString =
+            originalString.isEmpty ? value.toString() : originalString,
         super(preContent, postContent) {
     _span = span;
   }

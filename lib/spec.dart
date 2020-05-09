@@ -34,12 +34,30 @@ class Spec with collection.MapMixin {
     }
   }
 
+  /// Adds a dependency to the file.
   void addDependency(String dependencyName, String versionConstraint,
       {bool dev = false}) {
     if (dev) {
       contents['dev-dependencies'][dependencyName] = versionConstraint;
     } else {
       contents['dependencies'][dependencyName] = versionConstraint;
+    }
+  }
+
+  /// Adds a git depedency to the file.
+  void addGitDependency(String dependencyName, String url,
+      {String ref = '', String path = '', bool dev = false}) {
+    var params = {
+      'git': {'url': url}
+    };
+
+    if (ref.isNotEmpty) params['git']['ref'] = ref;
+    if (path.isNotEmpty) params['git']['path'] = path;
+
+    if (dev) {
+      contents['dev-dependencies'][dependencyName] = params;
+    } else {
+      contents['dependencies'][dependencyName] = params;
     }
   }
 

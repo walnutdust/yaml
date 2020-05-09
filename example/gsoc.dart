@@ -8,6 +8,8 @@ void main() {
 
   // pub add
   spec.addDependency('gsoc', '2.0.20');
+  spec.addGitDependency('retry', 'git://github.com/google/dart-neats',
+      path: 'retry', ref: 'master');
 
   // pub upgrade
   spec.upgrade('charcode', '^1.2.1');

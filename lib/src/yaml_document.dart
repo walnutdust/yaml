@@ -40,13 +40,6 @@ class YamlDocument {
   String toString() => contents.toString();
 
   String dump() {
-    // var s = '';
-
-    // s = startImplicit ? s : s + '---\n';
-    // s += contents.toPrettyString();
-    // s = endImplicit ? s : s + '...\n';
-    // return s;
-
     var p = Printer(contents);
     return p.toString();
   }
