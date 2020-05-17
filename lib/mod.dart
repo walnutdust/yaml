@@ -391,9 +391,18 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
   }
 }
 
+/// Returns a safe string by checking for strings that begin with > or |
+String getSafeString(String string) {
+  if (string.startsWith('>') || string.startsWith('|')) {
+    return '\'$string\'';
+  }
+
+  return string;
+}
+
 /// Returns values as strings representing flow objects.
 String getFlowString(Object value) {
-  return value.toString();
+  return getSafeString(value.toString());
 }
 
 /// Returns values as strings representing block objects.
@@ -413,7 +422,7 @@ String getBlockString(Object value, [int indentation = 0]) {
     }).join('\n');
   }
 
-  return value.toString();
+  return getSafeString(value.toString());
 }
 
 bool isCollection(Object value) => value is Map || value is List;

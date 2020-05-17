@@ -7,7 +7,7 @@ void main() {
   spec['name'] = 'yaml-gsoc';
 
   // pub add
-  spec.addDependency('gsoc', '2.0.20');
+  spec.addDependency('gsoc', '>2.0.20');
   spec.addGitDependency('retry', 'git://github.com/google/dart-neats',
       path: 'retry', ref: 'master');
 
