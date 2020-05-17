@@ -383,8 +383,7 @@ String getBlockString(Object value, [int indentation = 0]) {
       if (isCollection(entry.value)) {
         return ''.padLeft(indentation) +
             '${entry.key}:\n' +
-            getBlockString(entry.value, indentation + 2) +
-            '\n';
+            getBlockString(entry.value, indentation + 2);
       }
       return ''.padLeft(indentation) + '${entry.key}: ${entry.value}';
     }).join('\n');

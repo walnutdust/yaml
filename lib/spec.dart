@@ -1,4 +1,3 @@
-import 'dart:collection' as collection;
 import 'dart:io';
 
 import 'mod.dart';
