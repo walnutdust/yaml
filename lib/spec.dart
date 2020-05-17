@@ -1,37 +1,35 @@
 import 'dart:collection' as collection;
 import 'dart:io';
 
-import 'yaml.dart';
+import 'mod.dart';
 
-class Spec with collection.MapMixin {
-  final YamlDocument _document;
+class Spec {
+  dynamic yaml;
 
-  final String yaml;
+  Spec.load({String fileName}) : this(File(fileName).readAsStringSync());
 
-  YamlMap contents;
-
-  Spec.load({String fileName}) : this(yaml: File(fileName).readAsStringSync());
-
-  Spec({this.yaml = ''}) : _document = loadYamlDocument(yaml) {
-    contents = (_document.contents as YamlMap);
+  Spec([String yamlString = '']) {
+    yaml = loadYaml(yamlString);
   }
+
+  String dump() => yaml.toString();
 
   /// Upgrades a dependency to the new version constraint.
   void upgrade(String dependencyName, String versionConstraint,
       {bool dev = false}) {
     if (dev) {
-      contents['dev-dependencies'][dependencyName] = versionConstraint;
+      yaml['dev-dependencies'][dependencyName] = versionConstraint;
     } else {
-      contents['dependencies'][dependencyName] = versionConstraint;
+      yaml['dependencies'][dependencyName] = versionConstraint;
     }
   }
 
   /// Removes a dependency from the file.
   void removeDependency(String dependencyName, {bool dev = false}) {
     if (dev) {
-      contents['dev-dependencies'].remove(dependencyName);
+      yaml['dev-dependencies'].remove(dependencyName);
     } else {
-      contents['dependencies'].remove(dependencyName);
+      yaml['dependencies'].remove(dependencyName);
     }
   }
 
@@ -39,9 +37,9 @@ class Spec with collection.MapMixin {
   void addDependency(String dependencyName, String versionConstraint,
       {bool dev = false}) {
     if (dev) {
-      contents['dev-dependencies'][dependencyName] = versionConstraint;
+      yaml['dev-dependencies'][dependencyName] = versionConstraint;
     } else {
-      contents['dependencies'][dependencyName] = versionConstraint;
+      yaml['dependencies'][dependencyName] = versionConstraint;
     }
   }
 
@@ -56,9 +54,9 @@ class Spec with collection.MapMixin {
     if (path.isNotEmpty) params['git']['path'] = path;
 
     if (dev) {
-      contents['dev-dependencies'][dependencyName] = params;
+      yaml['dev-dependencies'][dependencyName] = params;
     } else {
-      contents['dependencies'][dependencyName] = params;
+      yaml['dependencies'][dependencyName] = params;
     }
   }
 
@@ -66,8 +64,8 @@ class Spec with collection.MapMixin {
   void versionBumpMinor() => versionBump(Version.minor);
   void versionBumpPatch() => versionBump(Version.patch);
 
-  /// Updates the version on the pubsec file, assuming semantic versioning.
-  /// https://semver.org/
+  /// Updates the version on the pubspec file, assuming semantic versioning.
+  /// Taken from https://semver.org/
   /// <valid semver> ::= <version core>
   ///                  | <version core> "-" <pre-release>
   ///                  | <version core> "+" <build>
@@ -75,11 +73,7 @@ class Spec with collection.MapMixin {
   ///
   /// <version core> ::= <major> "." <minor> "." <patch>
   void versionBump(Version versionType) {
-    if (!contents.containsKey('version')) {
-      throw Exception('Unable to find version in document');
-    }
-
-    var semver = contents['version'].toString();
+    var semver = yaml['version'].toString();
     var splitSemver = semver.split('+');
     var versionPreRelease = splitSemver[0].split('-');
     var semverPreRelease = versionPreRelease[0];
@@ -115,34 +109,17 @@ class Spec with collection.MapMixin {
       result += '+${splitSemver[1]}';
     }
 
-    contents['version'] = result;
-  }
-
-  String dump() {
-    return yaml;
+    yaml['version'] = result;
   }
 
   @override
   dynamic operator [](Object key) {
-    return contents[key];
+    return yaml[key];
   }
 
   @override
   void operator []=(key, value) {
-    contents[key] = value;
-  }
-
-  @override
-  void clear() {
-    contents.clear();
-  }
-
-  @override
-  Iterable get keys => contents.keys;
-
-  @override
-  dynamic remove(Object key) {
-    return contents.remove(key);
+    yaml[key] = value;
   }
 }
 

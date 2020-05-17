@@ -6,9 +6,5 @@ import 'package:yaml/mod.dart';
 
 void main() {
   var doc = loadYaml("YAML: YAML Ain't Markup Language");
-  print(doc);
-
-  doc['YAML'] = 'hi';
-
-  print(doc);
+  print(doc['YAML']);
 }

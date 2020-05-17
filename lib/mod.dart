@@ -6,9 +6,12 @@ import 'package:yaml/yaml.dart';
 
 dynamic loadYaml = (String yaml) => _YAML(yaml);
 
+/// _YAML represents a modifiable YAML document.
 class _YAML {
   String yaml;
 
+  // Root node of YAML AST. Definitely a _ModifiableYamlNode, but dynamic allows
+  // for us to implement both Map and List operations easily.
   dynamic _contents;
 
   _YAML(this.yaml) {
@@ -37,6 +40,9 @@ class _YAML {
     var contents = loadYamlNode(yaml);
     _contents = _modifiedYamlNodeFrom(contents, this);
   }
+
+  void insert(int offset, String replacement) =>
+      replaceRange(offset, offset, replacement);
 
   @override
   String toString() => yaml;
@@ -127,12 +133,8 @@ class _ModifiableYamlList extends _ModifiableYamlNode
   void operator []=(int index, value) {
     var currValue = nodes[index];
 
-    if (currValue == null) {
-      // TODO(walnut): adding an element
-    } else {
-      // TODO(walnut): list/map new values
-      _baseYaml.replaceRangeFromSpan(currValue._span, value.toString());
-    }
+    // TODO(walnut): list/map new values
+    _baseYaml.replaceRangeFromSpan(currValue._span, value.toString());
   }
 
   void removeFromFlowList(SourceSpan span, int index) {
@@ -187,18 +189,22 @@ class _ModifiableYamlList extends _ModifiableYamlNode
   }
 
   void addToFlowList(Object value) {
-    if (nodes.isEmpty) {
-      _baseYaml.replaceRange(
-          span.end.offset - 1, span.end.offset - 1, '$value');
-    } else {
-      _baseYaml.replaceRange(
-          span.end.offset - 1, span.end.offset - 1, ', $value');
-    }
+    var valueString = getFlowString(value);
+    if (nodes.isNotEmpty) valueString = ', ' + valueString;
+
+    _baseYaml.insert(span.end.offset - 1, valueString);
   }
 
   void addToBlockList(Object value) {
-    var valueString = ''.padLeft(indentation) + '- $value\n';
-    _baseYaml.replaceRange(span.end.offset, span.end.offset, valueString);
+    var valueString = getBlockString(value, indentation + 2);
+    var formattedValue = ''.padLeft(indentation) + '- ';
+
+    if (isCollection(value)) {
+      formattedValue += valueString.substring(indentation + 2) + '\n';
+    } else {
+      formattedValue += valueString + '\n';
+    }
+    _baseYaml.replaceRange(span.end.offset, span.end.offset, formattedValue);
   }
 
   @override
@@ -222,6 +228,24 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
 
   CollectionStyle style;
 
+  int get indentation {
+    if (style == CollectionStyle.FLOW) {
+      throw UnimplementedError('Unable to get indentation for flow list');
+    }
+
+    if (nodes.isEmpty) {
+      throw UnimplementedError(
+          'Unable to get indentation for empty block list');
+    }
+
+    var lastKey = nodes.keys.last as YamlNode;
+    var lastSpanOffset = lastKey.span.start.offset;
+    var lastNewLine = _baseYaml.yaml.lastIndexOf('\n', lastSpanOffset);
+    if (lastNewLine == -1) lastNewLine = 0;
+
+    return lastSpanOffset - lastNewLine - 1;
+  }
+
   _ModifiableYamlMap.from(YamlMap yamlMap, _YAML baseYaml) {
     _span = yamlMap.span;
     _baseYaml = baseYaml;
@@ -234,19 +258,67 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
   }
 
   @override
-  _ModifiableYamlNode operator [](key) {
-    return nodes[key];
+  _ModifiableYamlNode operator [](key) => nodes[key];
+
+  void addToFlowMap(Object key, Object value) {
+    if (nodes.isEmpty) {
+      _baseYaml.insert(span.end.offset - 1, '$key: $value');
+    } else {
+      _baseYaml.insert(span.end.offset - 1, ', $key: $value');
+    }
+  }
+
+  void addToBlockMap(Object key, Object value) {
+    var valueString = getBlockString(value, indentation + 2);
+    var formattedValue = ''.padLeft(indentation) + '$key: ';
+    var offset = span.end.offset;
+
+    if (nodes.isNotEmpty) {
+      var lastValueSpanEnd = nodes.values.last._span.end.offset;
+      var nextNewLineIndex = _baseYaml.yaml.indexOf('\n', lastValueSpanEnd);
+
+      if (nextNewLineIndex != -1) {
+        offset = nextNewLineIndex + 1;
+      }
+    }
+
+    if (isCollection(value)) {
+      formattedValue += '\n' + valueString + '\n';
+    } else {
+      formattedValue += valueString + '\n';
+    }
+    _baseYaml.insert(offset, formattedValue);
+  }
+
+  void replaceInFlowMap(SourceSpan valueSpan, Object value) {
+    var valueString = getFlowString(value);
+
+    if (isCollection(value)) valueString = '\n' + valueString;
+    _baseYaml.replaceRangeFromSpan(valueSpan, valueString);
+  }
+
+  void replaceInBlockMap(SourceSpan valueSpan, Object value) {
+    var valueString = getBlockString(value, indentation + 2);
+
+    if (isCollection(value)) valueString = '\n' + valueString;
+    _baseYaml.replaceRangeFromSpan(valueSpan, valueString);
   }
 
   @override
   void operator []=(key, value) {
-    var currValue = nodes[key];
-
-    if (currValue == null) {
-      // TODO(walnut): adding an element
+    if (!nodes.containsKey(key)) {
+      if (style == CollectionStyle.FLOW) {
+        addToFlowMap(key, value);
+      } else {
+        addToBlockMap(key, value);
+      }
     } else {
-      // TODO(walnut): list/map new values
-      _baseYaml.replaceRangeFromSpan(currValue._span, value.toString());
+      var valueSpan = nodes[key]._span;
+      if (style == CollectionStyle.FLOW) {
+        replaceInFlowMap(valueSpan, value);
+      } else {
+        replaceInBlockMap(valueSpan, value);
+      }
     }
   }
 
@@ -296,3 +368,29 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
   @override
   Map get value => this;
 }
+
+/// Returns values as strings representing flow objects.
+String getFlowString(Object value) {
+  return value.toString();
+}
+
+/// Returns values as strings representing block objects.
+String getBlockString(Object value, [int indentation = 0]) {
+  if (value is List) {
+    return value.map((e) => ''.padLeft(indentation) + '- $e').join('\n');
+  } else if (value is Map) {
+    return value.entries.map((entry) {
+      if (isCollection(entry.value)) {
+        return ''.padLeft(indentation) +
+            '${entry.key}:\n' +
+            getBlockString(entry.value, indentation + 2) +
+            '\n';
+      }
+      return ''.padLeft(indentation) + '${entry.key}: ${entry.value}';
+    }).join('\n');
+  }
+
+  return value.toString();
+}
+
+bool isCollection(Object value) => value is Map || value is List;

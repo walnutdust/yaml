@@ -139,7 +139,6 @@ recipe:
       expect(doc.toString(), equals('{YAML: hi}'));
     });
 
-    // !(walnut): It appears that the spacing at the back is not preserved.
     test('simple flow map with spacing', () {
       var doc = loadYaml("{YAML:  YAML Ain't Markup Language }");
       doc['YAML'] = 'hi';
@@ -248,7 +247,10 @@ c: 3
 a: 1
 b: 
   d: 4
-  e: [1, 2, 3]
+  e: 
+    - 1
+    - 2
+    - 3
 c: 3
 '''));
     });
@@ -267,7 +269,9 @@ c: 3
 a: 1
 b: 
   d: 4
-  e: {x: 3, y: 4}
+  e: 
+    x: 3
+    y: 4
 c: 3
 '''));
     });
@@ -512,6 +516,7 @@ c: 3
       expect(doc.toString(), equals('{a: 1, c: 3}'));
     });
   });
+
   group('add', () {
     test('simple block list ', () {
       var doc = loadYaml('''
@@ -530,6 +535,25 @@ c: 3
 '''));
     });
 
+    test('list to simple block list ', () {
+      var doc = loadYaml('''
+- 0
+- 1
+- 2
+- 3
+''');
+      doc.add([4, 5, 6]);
+      expect(doc.toString(), equals('''
+- 0
+- 1
+- 2
+- 3
+- - 4
+  - 5
+  - 6
+'''));
+    });
+
     test('nested block list ', () {
       var doc = loadYaml('''
 - 0
@@ -545,6 +569,23 @@ c: 3
 '''));
     });
 
+    test('block list to nested block list ', () {
+      var doc = loadYaml('''
+- 0
+- - 1
+  - 2
+''');
+      doc[1].add([3, 4, 5]);
+      expect(doc.toString(), equals('''
+- 0
+- - 1
+  - 2
+  - - 3
+    - 4
+    - 5
+'''));
+    });
+
     test('simple flow list ', () {
       var doc = loadYaml('[0, 1, 2]');
       doc.add(3);
@@ -555,6 +596,50 @@ c: 3
       var doc = loadYaml('[]');
       doc.add(0);
       expect(doc.toString(), equals('[0]'));
+    });
+
+    test('simple block map ', () {
+      var doc = loadYaml('''
+a: 1
+b: 2
+c: 3
+''');
+      doc['d'] = 4;
+      expect(doc.toString(), equals('''
+a: 1
+b: 2
+c: 3
+d: 4
+'''));
+    });
+
+    test('nested block map', () {
+      var doc = loadYaml('''
+a: 1
+b: 2
+c: 
+  d: 4
+''');
+      doc['c']['e'] = 5;
+      expect(doc.toString(), equals('''
+a: 1
+b: 2
+c: 
+  d: 4
+  e: 5
+'''));
+    });
+
+    test('simple flow map', () {
+      var doc = loadYaml('{a: 1, b: 2}');
+      doc['c'] = 3;
+      expect(doc.toString(), equals('{a: 1, b: 2, c: 3}'));
+    });
+
+    test('empty flow list ', () {
+      var doc = loadYaml('{}');
+      doc['a'] = 1;
+      expect(doc.toString(), equals('{a: 1}'));
     });
   });
 }
