@@ -512,4 +512,49 @@ c: 3
       expect(doc.toString(), equals('{a: 1, c: 3}'));
     });
   });
+  group('add', () {
+    test('simple block list ', () {
+      var doc = loadYaml('''
+- 0
+- 1
+- 2
+- 3
+''');
+      doc.add(4);
+      expect(doc.toString(), equals('''
+- 0
+- 1
+- 2
+- 3
+- 4
+'''));
+    });
+
+    test('nested block list ', () {
+      var doc = loadYaml('''
+- 0
+- - 1
+  - 2
+''');
+      doc[1].add(3);
+      expect(doc.toString(), equals('''
+- 0
+- - 1
+  - 2
+  - 3
+'''));
+    });
+
+    test('simple flow list ', () {
+      var doc = loadYaml('[0, 1, 2]');
+      doc.add(3);
+      expect(doc.toString(), equals('[0, 1, 2, 3]'));
+    });
+
+    test('empty flow list ', () {
+      var doc = loadYaml('[]');
+      doc.add(0);
+      expect(doc.toString(), equals('[0]'));
+    });
+  });
 }

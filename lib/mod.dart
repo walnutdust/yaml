@@ -24,6 +24,8 @@ class _YAML {
 
   dynamic get value => _contents.value;
 
+  void add(Object value) => _contents.add(value);
+
   void replaceRangeFromSpan(SourceSpan span, String replacement) {
     var start = span.start.offset;
     var end = span.end.offset;
@@ -47,9 +49,6 @@ abstract class _ModifiableYamlNode extends YamlNode {
   SourceSpan get span => _span;
 
   _YAML _baseYaml;
-
-  // _YAML update(value);
-  // void remove(value);
 }
 
 _ModifiableYamlNode _modifiedYamlNodeFrom(YamlNode node, _YAML baseYaml) {
@@ -101,6 +100,24 @@ class _ModifiableYamlList extends _ModifiableYamlNode
     for (var node in yamlList.nodes) {
       nodes.add(_modifiedYamlNodeFrom(node, _baseYaml));
     }
+  }
+
+  int get indentation {
+    if (style == CollectionStyle.FLOW) {
+      throw UnimplementedError('Unable to get indentation for flow list');
+    }
+
+    if (nodes.isEmpty) {
+      throw UnimplementedError(
+          'Unable to get indentation for empty block list');
+    }
+
+    var lastSpanOffset = nodes.last.span.start.offset;
+    var lastNewLine = _baseYaml.yaml.lastIndexOf('\n', lastSpanOffset);
+    if (lastNewLine == -1) lastNewLine = 0;
+    var lastHyphen = _baseYaml.yaml.lastIndexOf('-', lastSpanOffset);
+
+    return lastHyphen - lastNewLine - 1;
   }
 
   @override
@@ -167,6 +184,30 @@ class _ModifiableYamlList extends _ModifiableYamlNode
 
     removeAt(index);
     return true;
+  }
+
+  void addToFlowList(Object value) {
+    if (nodes.isEmpty) {
+      _baseYaml.replaceRange(
+          span.end.offset - 1, span.end.offset - 1, '$value');
+    } else {
+      _baseYaml.replaceRange(
+          span.end.offset - 1, span.end.offset - 1, ', $value');
+    }
+  }
+
+  void addToBlockList(Object value) {
+    var valueString = ''.padLeft(indentation) + '- $value\n';
+    _baseYaml.replaceRange(span.end.offset, span.end.offset, valueString);
+  }
+
+  @override
+  void add(Object value) {
+    if (style == CollectionStyle.FLOW) {
+      addToFlowList(value);
+    } else {
+      addToBlockList(value);
+    }
   }
 
   @override
