@@ -125,13 +125,6 @@ recipe:
       expect(doc.toString(), equals('YAML: hi # comment'));
     });
 
-    test('simple block map with comment and spacing', () {
-      var doc = loadYaml("YAML:  YAML Ain't Markup Language  # comment");
-      doc['YAML'] = 'hi';
-
-      expect(doc.toString(), equals('YAML:  hi  # comment'));
-    });
-
     test('simple flow map', () {
       var doc = loadYaml("{YAML: YAML Ain't Markup Language}");
       doc['YAML'] = 'hi';
@@ -252,6 +245,44 @@ b:
     - 2
     - 3
 c: 3
+'''));
+    });
+
+    test('nested block map -> scalar', () {
+      var doc = loadYaml('''
+a: 1
+b: 
+  d: 4
+  e: 5
+c: 3
+''');
+      doc['b'] = 2;
+
+      expect(doc.toString(), equals('''
+a: 1
+b: 2
+c: 3
+'''));
+    });
+
+    test('nested block map -> scalar (2)', () {
+      var doc = loadYaml('''
+a: 1
+b: 
+  d: 4
+  e: 5
+
+
+# comment
+''');
+      doc['b'] = 2;
+
+      expect(doc.toString(), equals('''
+a: 1
+b: 2
+
+
+# comment
 '''));
     });
 

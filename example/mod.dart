@@ -14,7 +14,7 @@ void main() {
   // pub upgrade
   spec.upgrade('charcode', '^1.2.1');
 
-  // spec.upgrade('retry', '^3.0.0');
+  spec.upgrade('retry', '^3.0.0');
 
   // pub remove
   spec.removeDependency('indent');
