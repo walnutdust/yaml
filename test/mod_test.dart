@@ -613,6 +613,25 @@ d: 4
 '''));
     });
 
+    test('simple block map with trailing newline', () {
+      var doc = loadYaml('''
+a: 1
+b: 2
+c: 3
+
+
+''');
+      doc['d'] = 4;
+      expect(doc.toString(), equals('''
+a: 1
+b: 2
+c: 3
+d: 4
+
+
+'''));
+    });
+
     test('nested block map', () {
       var doc = loadYaml('''
 a: 1
