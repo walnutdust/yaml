@@ -111,12 +111,10 @@ class Spec {
     yaml['version'] = result;
   }
 
-  @override
   dynamic operator [](Object key) {
     return yaml[key];
   }
 
-  @override
   void operator []=(key, value) {
     yaml[key] = value;
   }
