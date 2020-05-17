@@ -433,6 +433,8 @@ String getBlockString(Object value, [int indentation = 0]) {
   return getSafeString(value.toString());
 }
 
+/// Returns the content sensitive ending offset of a node (i.e. where the last
+/// meaningful content happens)
 int _getContentSensitiveEnd(_ModifiableYamlNode node) {
   if (node is _ModifiableYamlList) {
     return _getContentSensitiveEnd(node.last as _ModifiableYamlNode);
