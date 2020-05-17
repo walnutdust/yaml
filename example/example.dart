@@ -2,9 +2,13 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:yaml/yaml.dart';
+import 'package:yaml/mod.dart';
 
 void main() {
   var doc = loadYaml("YAML: YAML Ain't Markup Language");
-  print(doc['YAML']);
+  print(doc);
+
+  doc['YAML'] = 'hi';
+
+  print(doc);
 }
