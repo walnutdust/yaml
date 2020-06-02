@@ -1,59 +1,26 @@
-import 'package:yaml/spec.dart';
+import 'dart:io';
+import 'package:yaml/mod.dart';
 
 void main() {
-  var spec = Spec.load(fileName: './example/samples/sample-pubspec.yaml');
+  var yaml = loadYaml(
+      File('./example/samples/sample-pubspec.yaml').readAsStringSync());
 
-  // Simple modification:
-  spec['name'] = 'yaml-gsoc';
+  var yamlDeps = yaml['dependencies'];
+  var yamlCollectionDep = yamlDeps['collection'];
 
-  // pub add
-  spec.addDependency('gsoc', '>2.0.20');
-  spec.addGitDependency('retry', 'git://github.com/google/dart-neats',
-      path: 'retry', ref: 'master');
+  print(yamlCollectionDep); // >=1.1.0 <2.0.0
 
-  // pub upgrade
-  spec.upgrade('charcode', '^1.2.1');
+  yamlDeps['collection'] = '2.0.0';
 
-  // spec.upgrade('retry', '^3.0.0');
+  // yamlDeps and yaml will both be updated
+  print(yamlDeps);
+  print(yaml);
 
-  // pub remove
-  spec.removeDependency('indent');
+  yaml.remove('dependencies');
 
-  // pub version
-  spec.versionBumpMinor();
+  print(yaml);
+  print(yamlDeps);
 
-  print(spec.dump());
-
-  // Expected output:
-  //
-  // name: yaml-gsoc # comment
-  // version: 2.3.1-dev # comment
-  //
-  // description: A parser for YAML, a human-friendly data serialization standard
-  // homepage: https://github.com/dart-lang/yaml
-  //
-  // environment:
-  //   sdk: '>=2.4.0 <3.0.0'
-  //
-  // dependencies: # list of dependencies
-  //
-  //   charcode: ^1.2.1 # charcode dependency
-  //   collection: '>=1.1.0 <2.0.0'
-  //
-  //   # comment
-  //
-  //   string_scanner: '>=0.1.4 <2.0.0'
-  //   source_span: '>=1.0.0 <2.0.0'
-  //   gsoc: '>2.0.20'
-  //   retry:
-  //     git:
-  //       url: git://github.com/google/dart-neats
-  //       ref: master
-  //       path: retry
-  //
-  // # This is a list of dev dependencies
-  // dev_dependencies:
-  //   pedantic: ^1.0.0
-  //   path: '>=1.2.0 <2.0.0'
-  //   test: '>=0.12.0 <2.0.0'
+  // ? Currently throws an error -> do we want this behavior?
+  print(yamlCollectionDep);
 }

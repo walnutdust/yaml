@@ -29,7 +29,7 @@ class _YAML {
   String toString() => yaml;
 
   // MARK - methods to simulate a List/Map interface.
-  dynamic operator [](key) => _contents[key];
+  dynamic operator [](key) => _YAMLPath([key], this);
   operator []=(key, value) => _contents[key] = value;
 
   dynamic remove(Object value) => _contents.remove(value);
@@ -55,6 +55,47 @@ class _YAML {
     yaml = yaml.replaceRange(start, end, replacement);
     var contents = loadYamlNode(yaml);
     _contents = _modifiedYamlNodeFrom(contents, this);
+  }
+}
+
+/// Interface for a path of keys in a YAML document. This class only stores
+/// the path from the root of a YAML document, and the value is only dynamically
+/// obtained when the value method is called. When using this class, there is a
+/// possibility that the YAML document has been modified in such a way that
+/// this root becomes the child of a parent that does not exist in the YAML tree,
+/// and can lead to errors when called.
+class _YAMLPath {
+  // Path from parent to current node.
+  final List path;
+
+  // Parent _YAML from which the path is defined
+  final _YAML parent;
+
+  _YAMLPath(this.path, this.parent);
+
+  // Performs a "dynamic dispatch"
+  dynamic get value {
+    dynamic current = parent._contents;
+    for (var elem in path) {
+      current = current[elem];
+      // TODO - null/error key checks
+    }
+
+    return current;
+  }
+
+  dynamic operator [](key) => _YAMLPath([...path, key], parent);
+
+  operator []=(key, newValue) => value[key] = newValue;
+
+  dynamic remove(Object toRemove) => value.remove(toRemove);
+  dynamic removeAt(int index) => value.removeAt(index);
+
+  void add(Object newValue) => value.add(newValue);
+
+  @override
+  String toString() {
+    return value.toString();
   }
 }
 
