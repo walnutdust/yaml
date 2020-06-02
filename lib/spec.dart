@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'mod.dart';
+import 'mod_wrapper.dart';
 
 class Spec {
   dynamic yaml;
@@ -8,27 +8,31 @@ class Spec {
   Spec.load({String fileName}) : this(File(fileName).readAsStringSync());
 
   Spec([String yamlString = '']) {
-    yaml = loadYaml(yamlString);
+    yaml = ModifiableYAML(yamlString);
   }
 
   String dump() => yaml.toString();
+
+  void setIn(path, value) {
+    yaml.setIn(path, value);
+  }
 
   /// Upgrades a dependency to the new version constraint.
   void upgrade(String dependencyName, String versionConstraint,
       {bool dev = false}) {
     if (dev) {
-      yaml['dev-dependencies'][dependencyName] = versionConstraint;
+      yaml.setIn(['dev-dependencies', dependencyName], versionConstraint);
     } else {
-      yaml['dependencies'][dependencyName] = versionConstraint;
+      yaml.setIn(['dependencies', dependencyName], versionConstraint);
     }
   }
 
   /// Removes a dependency from the file.
   void removeDependency(String dependencyName, {bool dev = false}) {
     if (dev) {
-      yaml['dev-dependencies'].remove(dependencyName);
+      yaml.removeIn(['dev-dependencies', dependencyName]);
     } else {
-      yaml['dependencies'].remove(dependencyName);
+      yaml.removeIn(['dependencies', dependencyName]);
     }
   }
 
@@ -36,9 +40,9 @@ class Spec {
   void addDependency(String dependencyName, String versionConstraint,
       {bool dev = false}) {
     if (dev) {
-      yaml['dev-dependencies'][dependencyName] = versionConstraint;
+      yaml.setIn(['dev-dependencies', dependencyName], versionConstraint);
     } else {
-      yaml['dependencies'][dependencyName] = versionConstraint;
+      yaml.setIn(['dependencies', dependencyName], versionConstraint);
     }
   }
 
@@ -53,9 +57,9 @@ class Spec {
     if (path.isNotEmpty) params['git']['path'] = path;
 
     if (dev) {
-      yaml['dev-dependencies'][dependencyName] = params;
+      yaml.setIn(['dev-dependencies', dependencyName], params);
     } else {
-      yaml['dependencies'][dependencyName] = params;
+      yaml.setIn(['dependencies', dependencyName], params);
     }
   }
 
@@ -72,7 +76,7 @@ class Spec {
   ///
   /// <version core> ::= <major> "." <minor> "." <patch>
   void versionBump(Version versionType) {
-    var semver = yaml['version'].toString();
+    var semver = yaml.getValueIn('version').toString();
     var splitSemver = semver.split('+');
     var versionPreRelease = splitSemver[0].split('-');
     var semverPreRelease = versionPreRelease[0];
@@ -108,15 +112,7 @@ class Spec {
       result += '+${splitSemver[1]}';
     }
 
-    yaml['version'] = result;
-  }
-
-  dynamic operator [](Object key) {
-    return yaml[key];
-  }
-
-  void operator []=(key, value) {
-    yaml[key] = value;
+    yaml.setIn('version', result);
   }
 }
 

@@ -4,7 +4,7 @@ void main() {
   var spec = Spec.load(fileName: './example/samples/sample-pubspec.yaml');
 
   // Simple modification:
-  spec['name'] = 'yaml-gsoc';
+  spec.setIn('name', 'yaml-gsoc');
 
   // pub add
   spec.addDependency('gsoc', '>2.0.20');
