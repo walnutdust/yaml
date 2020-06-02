@@ -113,83 +113,83 @@ recipe:
   group('updates', () {
     test('simple block map', () {
       var doc = loadYaml("YAML: YAML Ain't Markup Language");
-      doc['YAML'] = 'hi';
+      var newDoc = doc.setIn('YAML', 'hi');
 
-      expect(doc.toString(), equals('YAML: hi'));
+      expect(newDoc.toString(), equals('YAML: hi'));
     });
 
     test('simple block map with comment', () {
       var doc = loadYaml("YAML: YAML Ain't Markup Language # comment");
-      doc['YAML'] = 'hi';
+      var newDoc = doc.setIn('YAML', 'hi');
 
-      expect(doc.toString(), equals('YAML: hi # comment'));
+      expect(newDoc.toString(), equals('YAML: hi # comment'));
     });
 
     test('simple flow map', () {
       var doc = loadYaml("{YAML: YAML Ain't Markup Language}");
-      doc['YAML'] = 'hi';
+      var newDoc = doc.setIn('YAML', 'hi');
 
-      expect(doc.toString(), equals('{YAML: hi}'));
+      expect(newDoc.toString(), equals('{YAML: hi}'));
     });
 
     test('simple flow map with spacing', () {
       var doc = loadYaml("{YAML:  YAML Ain't Markup Language }");
-      doc['YAML'] = 'hi';
+      var newDoc = doc.setIn('YAML', 'hi');
 
-      expect(doc.toString(), equals('{YAML:  hi}'));
+      expect(newDoc.toString(), equals('{YAML:  hi}'));
     });
 
     test('simple flow map with spacing (2)', () {
       var doc = loadYaml(
           "{ YAML:  YAML Ain't Markup Language , XML: Extensible Markup Language , HTML: Hypertext Markup Language }");
-      doc['XML'] = 'XML Markup Language';
+      var newDoc = doc.setIn('XML', 'XML Markup Language');
 
       expect(
-          doc.toString(),
+          newDoc.toString(),
           equals(
               "{ YAML:  YAML Ain't Markup Language , XML: XML Markup Language, HTML: Hypertext Markup Language }"));
     });
 
     test('simple block list', () {
       var doc = loadYaml("- YAML Ain't Markup Language");
-      doc[0] = 'hi';
+      var newDoc = doc.setIn(0, 'hi');
 
-      expect(doc.toString(), equals('- hi'));
+      expect(newDoc.toString(), equals('- hi'));
     });
 
     test('simple block list with comment', () {
       var doc = loadYaml("- YAML Ain't Markup Language # comment");
-      doc[0] = 'hi';
+      var newDoc = doc.setIn(0, 'hi');
 
-      expect(doc.toString(), equals('- hi # comment'));
+      expect(newDoc.toString(), equals('- hi # comment'));
     });
 
     test('simple block list with comment and spaces', () {
       var doc = loadYaml("-  YAML Ain't Markup Language  # comment");
-      doc[0] = 'hi';
+      var newDoc = doc.setIn(0, 'hi');
 
-      expect(doc.toString(), equals('-  hi  # comment'));
+      expect(newDoc.toString(), equals('-  hi  # comment'));
     });
 
     test('simple flow list', () {
       var doc = loadYaml("[YAML Ain't Markup Language]");
-      doc[0] = 'hi';
+      var newDoc = doc.setIn(0, 'hi');
 
-      expect(doc.toString(), equals('[hi]'));
+      expect(newDoc.toString(), equals('[hi]'));
     });
 
     test('simple flow list with spacing', () {
       var doc = loadYaml("[ YAML Ain't Markup Language ]");
-      doc[0] = 'hi';
+      var newDoc = doc.setIn(0, 'hi');
 
-      expect(doc.toString(), equals('[ hi]'));
+      expect(newDoc.toString(), equals('[ hi]'));
     });
 
     test('simple flow list with spacing (2)', () {
       var doc = loadYaml('[ 0 , 1 , 2 , 3 ]');
-      doc[1] = 4;
+      var newDoc = doc.setIn(1, 4);
 
-      expect(doc.toString(), equals('[ 0 , 4, 2 , 3 ]'));
+      expect(newDoc.toString(), equals('[ 0 , 4, 2 , 3 ]'));
     });
 
     test('nested block map', () {
@@ -200,9 +200,9 @@ b:
   e: 5
 c: 3
 ''');
-      doc['b']['e'] = 6;
+      var newDoc = doc.setIn(['b', 'e'], 6);
 
-      expect(doc.toString(), equals('''
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 
   d: 4
@@ -217,9 +217,9 @@ a: 1
 b: {d: 4, e: 5}
 c: 3
 ''');
-      doc['b']['e'] = 6;
+      var newDoc = doc.setIn(['b', 'e'], 6);
 
-      expect(doc.toString(), equals('''
+      expect(newDoc.toString(), equals('''
 a: 1
 b: {d: 4, e: 6}
 c: 3
@@ -234,9 +234,9 @@ b:
   e: 5
 c: 3
 ''');
-      doc['b']['e'] = [1, 2, 3];
+      var newDoc = doc.setIn(['b', 'e'], [1, 2, 3]);
 
-      expect(doc.toString(), equals('''
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 
   d: 4
@@ -256,9 +256,9 @@ b:
   e: 5
 c: 3
 ''');
-      doc['b'] = 2;
+      var newDoc = doc.setIn('b', 2);
 
-      expect(doc.toString(), equals('''
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 2
 c: 3
@@ -275,9 +275,9 @@ b:
 
 # comment
 ''');
-      doc['b'] = 2;
+      var newDoc = doc.setIn('b', 2);
 
-      expect(doc.toString(), equals('''
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 2
 
@@ -294,9 +294,9 @@ b:
   e: 5
 c: 3
 ''');
-      doc['b']['e'] = {'x': 3, 'y': 4};
+      var newDoc = doc.setIn(['b', 'e'], {'x': 3, 'y': 4});
 
-      expect(doc.toString(), equals('''
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 
   d: 4
@@ -315,9 +315,9 @@ b:
   e: 5 # comment
 c: 3
 ''');
-      doc['b']['e'] = 6;
+      var newDoc = doc.setIn(['b', 'e'], 6);
 
-      expect(doc.toString(), equals('''
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 
   d: 4
@@ -336,9 +336,8 @@ b:
 # comment
 c: 3
 ''');
-      doc['b']['e'] = 6;
-
-      expect(doc.toString(), equals('''
+      var newDoc = doc.setIn(['b', 'e'], 6);
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 
   d: 4 # comment
@@ -358,8 +357,9 @@ c: 3
 - 2
 - 3
 ''');
-      doc[1][1] = 4;
-      expect(doc.toString(), equals('''
+
+      var newDoc = doc.setIn([1, 1], 4);
+      expect(newDoc.toString(), equals('''
 - 0
 - - 0
   - 4
@@ -376,8 +376,8 @@ c: 3
 - 2
 - 3
 ''');
-      doc[1] = 4;
-      expect(doc.toString(), equals('''
+      var newDoc = doc.setIn(1, 4);
+      expect(newDoc.toString(), equals('''
 - 0
 - 4
 - 2
@@ -395,8 +395,9 @@ c: 3
 - 2
 - 3
 ''');
-      doc[1]['a'][0] = 15;
-      expect(doc.toString(), equals('''
+      var newDoc = doc.setIn([1, 'a', 0], 15);
+
+      expect(newDoc.toString(), equals('''
 - 0
 - a:
    - 15
@@ -416,8 +417,8 @@ c: 3
 - 2
 - 3
 ''');
-      doc.removeAt(1);
-      expect(doc.toString(), equals('''
+      var newDoc = doc.removeAt(1);
+      expect(newDoc.toString(), equals('''
 - 0
 - 2
 - 3
@@ -431,8 +432,8 @@ c: 3
 - 2
 - 3
 ''');
-      doc.removeAt(1);
-      expect(doc.toString(), equals('''
+      var newDoc = doc.removeAt(1);
+      expect(newDoc.toString(), equals('''
 - 0
 - 2
 - 3
@@ -446,8 +447,8 @@ c: 3
 - 2
 - 3
 ''');
-      doc.removeAt(1);
-      expect(doc.toString(), equals('''
+      var newDoc = doc.removeAt(1);
+      expect(newDoc.toString(), equals('''
 - 0
 - 2
 - 3
@@ -460,8 +461,8 @@ c: 3
 - 2
 - 3
 ''');
-      doc.removeAt(1);
-      expect(doc.toString(), equals('''
+      var newDoc = doc.removeAt(1);
+      expect(newDoc.toString(), equals('''
 - 0
 - 2
 - 3
@@ -470,20 +471,20 @@ c: 3
 
     test('simple flow list', () {
       var doc = loadYaml('[1, 2, 3]');
-      doc.removeAt(1);
-      expect(doc.toString(), equals('[1, 3]'));
+      var newDoc = doc.removeAt(1);
+      expect(newDoc.toString(), equals('[1, 3]'));
     });
 
     test('simple flow list (2)', () {
       var doc = loadYaml('[1, "b", "c"]');
-      doc.removeAt(1);
-      expect(doc.toString(), equals('[1, "c"]'));
+      var newDoc = doc.removeAt(1);
+      expect(newDoc.toString(), equals('[1, "c"]'));
     });
 
     test('simple flow list (3)', () {
       var doc = loadYaml('[1, {a: 1}, "c"]');
-      doc.removeAt(1);
-      expect(doc.toString(), equals('[1, "c"]'));
+      var newDoc = doc.removeAt(1);
+      expect(newDoc.toString(), equals('[1, "c"]'));
     });
   });
 
@@ -495,8 +496,8 @@ c: 3
 - 2
 - 3
 ''');
-      doc.remove(1);
-      expect(doc.toString(), equals('''
+      var newDoc = doc.remove(1);
+      expect(newDoc.toString(), equals('''
 - 0
 - 2
 - 3
@@ -505,27 +506,27 @@ c: 3
 
     test('simple flow list ', () {
       var doc = loadYaml('[1, 2, 3]');
-      doc.remove(2);
-      expect(doc.toString(), equals('[1, 3]'));
+      var newDoc = doc.remove(2);
+      expect(newDoc.toString(), equals('[1, 3]'));
     });
 
     test('simple flow list (2)', () {
       var doc = loadYaml('[1, 2, 3]');
-      doc.remove(3);
-      expect(doc.toString(), equals('[1, 2]'));
+      var newDoc = doc.remove(3);
+      expect(newDoc.toString(), equals('[1, 2]'));
     });
 
     // !(walnut): the space before the two should be removed if possible too.
     test('simple flow list (3)', () {
       var doc = loadYaml('[1, 2, 3]');
-      doc.remove(1);
-      expect(doc.toString(), equals('[ 2, 3]'));
+      var newDoc = doc.remove(1);
+      expect(newDoc.toString(), equals('[ 2, 3]'));
     });
 
     test('simple flow list (4)', () {
       var doc = loadYaml('[1, 2, 3]');
-      doc.remove(4);
-      expect(doc.toString(), equals('[1, 2, 3]'));
+      var newDoc = doc.remove(4);
+      expect(newDoc.toString(), equals('[1, 2, 3]'));
     });
 
     test('simple block map', () {
@@ -534,8 +535,8 @@ a: 1
 b: 2
 c: 3
 ''');
-      doc.remove('b');
-      expect(doc.toString(), equals('''
+      var newDoc = doc.remove('b');
+      expect(newDoc.toString(), equals('''
 a: 1
 c: 3
 '''));
@@ -543,8 +544,8 @@ c: 3
 
     test('simple flow map ', () {
       var doc = loadYaml('{a: 1, b: 2, c: 3}');
-      doc.remove('b');
-      expect(doc.toString(), equals('{a: 1, c: 3}'));
+      var newDoc = doc.remove('b');
+      expect(newDoc.toString(), equals('{a: 1, c: 3}'));
     });
   });
 
@@ -556,8 +557,8 @@ c: 3
 - 2
 - 3
 ''');
-      doc.add(4);
-      expect(doc.toString(), equals('''
+      var newDoc = doc.add(4);
+      expect(newDoc.toString(), equals('''
 - 0
 - 1
 - 2
@@ -573,8 +574,8 @@ c: 3
 - 2
 - 3
 ''');
-      doc.add([4, 5, 6]);
-      expect(doc.toString(), equals('''
+      var newDoc = doc.add([4, 5, 6]);
+      expect(newDoc.toString(), equals('''
 - 0
 - 1
 - 2
@@ -619,14 +620,14 @@ c: 3
 
     test('simple flow list ', () {
       var doc = loadYaml('[0, 1, 2]');
-      doc.add(3);
-      expect(doc.toString(), equals('[0, 1, 2, 3]'));
+      var newDoc = doc.add(3);
+      expect(newDoc.toString(), equals('[0, 1, 2, 3]'));
     });
 
     test('empty flow list ', () {
       var doc = loadYaml('[]');
-      doc.add(0);
-      expect(doc.toString(), equals('[0]'));
+      var newDoc = doc.add(0);
+      expect(newDoc.toString(), equals('[0]'));
     });
 
     test('simple block map ', () {
@@ -635,8 +636,8 @@ a: 1
 b: 2
 c: 3
 ''');
-      doc['d'] = 4;
-      expect(doc.toString(), equals('''
+      var newDoc = doc.setIn('d', 4);
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 2
 c: 3
@@ -652,8 +653,8 @@ c: 3
 
 
 ''');
-      doc['d'] = 4;
-      expect(doc.toString(), equals('''
+      var newDoc = doc.setIn('d', 4);
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 2
 c: 3
@@ -670,8 +671,8 @@ b: 2
 c: 
   d: 4
 ''');
-      doc['c']['e'] = 5;
-      expect(doc.toString(), equals('''
+      var newDoc = doc.setIn(['c', 'e'], 5);
+      expect(newDoc.toString(), equals('''
 a: 1
 b: 2
 c: 
@@ -682,14 +683,15 @@ c:
 
     test('simple flow map', () {
       var doc = loadYaml('{a: 1, b: 2}');
-      doc['c'] = 3;
-      expect(doc.toString(), equals('{a: 1, b: 2, c: 3}'));
+      var newDoc = doc.setIn('c', 3);
+      expect(newDoc.toString(), equals('{a: 1, b: 2, c: 3}'));
     });
 
     test('empty flow list ', () {
       var doc = loadYaml('{}');
-      doc['a'] = 1;
-      expect(doc.toString(), equals('{a: 1}'));
+      var newDoc = doc.setIn('a', 1);
+
+      expect(newDoc.toString(), equals('{a: 1}'));
     });
   });
 }
