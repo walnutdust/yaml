@@ -45,7 +45,9 @@ class _YAML {
 
   void replaceRangeFromSpan(SourceSpan span, String replacement) {
     var start = span.start.offset;
-    var end = span.end.offset;
+    // var end = span.end.offset;
+    var end = _getSpaceSensitiveEnd(yaml, span.end.offset);
+
     _replaceRange(start, end, replacement);
   }
 
@@ -443,6 +445,15 @@ int _getContentSensitiveEnd(_ModifiableYamlNode node) {
   }
 
   return node.span.end.offset;
+}
+
+/// Returns the position of the last non-space character
+int _getSpaceSensitiveEnd(String yaml, int offset) {
+  var substring = yaml.substring(0, offset);
+  var trimmedSubstring = substring.trimRight();
+  var diff = substring.length - trimmedSubstring.length;
+
+  return offset - diff;
 }
 
 bool isCollection(Object item) => item is Map || item is List;

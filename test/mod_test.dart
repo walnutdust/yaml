@@ -136,7 +136,7 @@ recipe:
       var doc = loadYaml("{YAML:  YAML Ain't Markup Language }");
       doc['YAML'] = 'hi';
 
-      expect(doc.toString(), equals('{YAML:  hi}'));
+      expect(doc.toString(), equals('{YAML:  hi }'));
     });
 
     test('simple flow map with spacing (2)', () {
@@ -147,7 +147,7 @@ recipe:
       expect(
           doc.toString(),
           equals(
-              "{ YAML:  YAML Ain't Markup Language , XML: XML Markup Language, HTML: Hypertext Markup Language }"));
+              "{ YAML:  YAML Ain't Markup Language , XML: XML Markup Language , HTML: Hypertext Markup Language }"));
     });
 
     test('simple block list', () {
@@ -182,14 +182,28 @@ recipe:
       var doc = loadYaml("[ YAML Ain't Markup Language ]");
       doc[0] = 'hi';
 
-      expect(doc.toString(), equals('[ hi]'));
+      expect(doc.toString(), equals('[ hi ]'));
     });
 
     test('simple flow list with spacing (2)', () {
       var doc = loadYaml('[ 0 , 1 , 2 , 3 ]');
       doc[1] = 4;
 
-      expect(doc.toString(), equals('[ 0 , 4, 2 , 3 ]'));
+      expect(doc.toString(), equals('[ 0 , 4 , 2 , 3 ]'));
+    });
+
+    test('simple flow list with spacing (3)', () {
+      var doc = loadYaml('[ 0 , 1 , 2 , 3 ]');
+      doc[1] = [4, 5];
+
+      expect(doc.toString(), equals('[ 0 , [4, 5] , 2 , 3 ]'));
+    });
+
+    test('simple flow list with spacing (3)', () {
+      var doc = loadYaml('[ 0 , 1 , 2 , 3 ]');
+      doc[1] = {'a': 1, 'b': 2};
+
+      expect(doc.toString(), equals('[ 0 , {a: 1, b: 2} , 2 , 3 ]'));
     });
 
     test('nested block map', () {
@@ -524,6 +538,13 @@ c: 3
 
     test('simple flow list (4)', () {
       var doc = loadYaml('[1, 2, 3]');
+      doc.remove(1);
+      doc.remove(2);
+      expect(doc.toString(), equals('[ 3]'));
+    });
+
+    test('simple flow list (5)', () {
+      var doc = loadYaml('[1, 2, 3]');
       doc.remove(4);
       expect(doc.toString(), equals('[1, 2, 3]'));
     });
@@ -585,6 +606,24 @@ c: 3
 '''));
     });
 
+    test('map to simple block list ', () {
+      var doc = loadYaml('''
+- 0
+- 1
+- 2
+- 3
+''');
+      doc.add({'d': 4, 'e': 5});
+      expect(doc.toString(), equals('''
+- 0
+- 1
+- 2
+- 3
+- d: 4
+  e: 5
+'''));
+    });
+
     test('nested block list ', () {
       var doc = loadYaml('''
 - 0
@@ -621,6 +660,18 @@ c: 3
       var doc = loadYaml('[0, 1, 2]');
       doc.add(3);
       expect(doc.toString(), equals('[0, 1, 2, 3]'));
+    });
+
+    test('flow list to simple flow list ', () {
+      var doc = loadYaml('[0, 1, 2]');
+      doc.add([3, 4]);
+      expect(doc.toString(), equals('[0, 1, 2, [3, 4]]'));
+    });
+
+    test('flow map to simple flow list ', () {
+      var doc = loadYaml('[0, 1, 2]');
+      doc.add({'c': 3, 'd': 4});
+      expect(doc.toString(), equals('[0, 1, 2, {c: 3, d: 4}]'));
     });
 
     test('empty flow list ', () {
