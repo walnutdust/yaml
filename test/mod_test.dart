@@ -132,6 +132,23 @@ recipe:
       expect(doc.toString(), equals('{YAML: hi}'));
     });
 
+    test('simple flow map (2)', () {
+      var doc = loadYaml('''
+Sammy Sosa: {
+    hr: 63,
+    avg: 0.288
+  }
+''');
+      doc['Sammy Sosa']['hr'] = 65;
+
+      expect(doc.toString(), equals('''
+Sammy Sosa: {
+    hr: 65,
+    avg: 0.288
+  }
+'''));
+    });
+
     test('simple flow map with spacing', () {
       var doc = loadYaml("{YAML:  YAML Ain't Markup Language }");
       doc['YAML'] = 'hi';
@@ -148,6 +165,23 @@ recipe:
           doc.toString(),
           equals(
               "{ YAML:  YAML Ain't Markup Language , XML: XML Markup Language , HTML: Hypertext Markup Language }"));
+    });
+
+    test('simple flow map with comments', () {
+      var doc = loadYaml('''
+Sammy Sosa: {
+    hr: 63, # comment
+    avg: 0.288
+  }
+''');
+      doc['Sammy Sosa']['hr'] = 65;
+
+      expect(doc.toString(), equals('''
+Sammy Sosa: {
+    hr: 65, # comment
+    avg: 0.288
+  }
+'''));
     });
 
     test('simple block list', () {
@@ -178,6 +212,23 @@ recipe:
       expect(doc.toString(), equals('[hi]'));
     });
 
+    test('simple flow list (2)', () {
+      var doc = loadYaml('''
+[ 0 ,
+  1 ,
+  2 ,
+  3 ]
+''');
+      doc[1] = 4;
+
+      expect(doc.toString(), equals('''
+[ 0 ,
+  4 ,
+  2 ,
+  3 ]
+'''));
+    });
+
     test('simple flow list with spacing', () {
       var doc = loadYaml("[ YAML Ain't Markup Language ]");
       doc[0] = 'hi';
@@ -199,11 +250,35 @@ recipe:
       expect(doc.toString(), equals('[ 0 , [4, 5] , 2 , 3 ]'));
     });
 
-    test('simple flow list with spacing (3)', () {
+    test('simple flow list with spacing (4)', () {
       var doc = loadYaml('[ 0 , 1 , 2 , 3 ]');
       doc[1] = {'a': 1, 'b': 2};
 
       expect(doc.toString(), equals('[ 0 , {a: 1, b: 2} , 2 , 3 ]'));
+    });
+
+    test('simple flow list with spacing (6)', () {
+      var doc = loadYaml('[ 0 , 1 , 2 , 3 ]');
+      doc[1] = '4';
+
+      expect(doc.toString(), equals('[ 0 , 4 , 2 , 3 ]'));
+    });
+
+    test('simple flow list with comments', () {
+      var doc = loadYaml('''
+[ 0 , # comment
+  1 , # comment
+  2 ,
+  3 ]
+''');
+      doc[1] = 4;
+
+      expect(doc.toString(), equals('''
+[ 0 , # comment
+  4 , # comment
+  2 ,
+  3 ]
+'''));
     });
 
     test('nested block map', () {

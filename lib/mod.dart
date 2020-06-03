@@ -156,7 +156,6 @@ class _ModifiableYamlList extends _ModifiableYamlNode
   void operator []=(int index, newValue) {
     var currValue = nodes[index];
 
-    // TODO(walnut): list/map new values
     _baseYaml.replaceRangeFromSpan(currValue._span, newValue.toString());
   }
 
