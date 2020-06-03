@@ -108,6 +108,20 @@ recipe:
     inputs: Dish
     ''');
     });
+
+    test('block map with complex keys', () {
+      expectUnchangedYamlAfterLoading('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+''');
+    });
   });
 
   group('updates', () {
@@ -278,6 +292,118 @@ Sammy Sosa: {
   4 , # comment
   2 ,
   3 ]
+'''));
+    });
+
+    test('block map with complex keys', () {
+      var doc = loadYaml('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+''');
+      doc[['Detroit Tigers', 'Chicago cubs']][0] = '2002-08-24';
+
+      expect(doc.toString(), equals('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2002-08-24
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+'''));
+    });
+
+    test('block map with complex keys (2)', () {
+      var doc = loadYaml('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+''');
+      doc[['New York Yankees', 'Atlanta Braves']][0] = '2002-08-03';
+
+      expect(doc.toString(), equals('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2002-08-03, 2001-08-12,
+    2001-08-14 ]
+'''));
+    });
+
+    // TODO(walnut): update from array -> normal value
+
+    test('block map with complex keys', () {
+      var doc = loadYaml('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23 # comment
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+''');
+      doc[['Detroit Tigers', 'Chicago cubs']][0] = '2002-08-24';
+
+      expect(doc.toString(), equals('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2002-08-24 # comment
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+'''));
+    });
+
+    test('block map with complex keys  and comments (2)', () {
+      var doc = loadYaml('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, # comment
+    2001-08-12, # comment
+    2001-08-14 ]
+''');
+      doc[['New York Yankees', 'Atlanta Braves']][1] = '2002-09-13';
+
+      expect(doc.toString(), equals('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, # comment
+    2002-09-13, # comment
+    2001-08-14 ]
 '''));
     });
 

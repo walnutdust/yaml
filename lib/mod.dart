@@ -55,6 +55,7 @@ class _YAML {
 
   void _replaceRange(int start, int end, String replacement) {
     yaml = yaml.replaceRange(start, end, replacement);
+
     var contents = loadYamlNode(yaml);
     _contents = _modifiedYamlNodeFrom(contents, this);
   }
@@ -301,7 +302,8 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
   }
 
   YamlNode getKeyNode(Object key) {
-    return (nodes.keys.firstWhere((node) => node.value == key) as YamlNode);
+    return (nodes.keys.firstWhere((node) => deepEquals(node.value, key))
+        as YamlNode);
   }
 
   @override
