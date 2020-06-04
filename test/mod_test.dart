@@ -95,6 +95,52 @@ void main() {
     ''');
     });
 
+    test('document', () {
+      expectUnchangedYamlAfterLoading('''
+# Sets are represented as a
+# Mapping where each key is
+# associated with a null value
+--- 
+? Mark McGwire
+? Sammy Sosa
+? Ken Griff
+    ''');
+    });
+
+    test('document (2)', () {
+      expectUnchangedYamlAfterLoading('''
+--- 
+invoice: 34843
+date   : 2001-01-23
+bill-to: &id001
+    given  : Chris
+    family : Dumars
+    address:
+        lines: |
+            458 Walkman Dr.
+            Suite #292
+        city    : Royal Oak
+        state   : MI
+        postal  : 48046
+ship-to: *id001
+product:
+    - sku         : BL394D
+      quantity    : 4
+      description : Basketball
+      price       : 450.00
+    - sku         : BL4438H
+      quantity    : 1
+      description : Super Hoop
+      price       : 2392.00
+tax  : 251.42
+total: 4443.52
+comments:
+    Late afternoon is best.
+    Backup contact is Nancy
+    Billsmer @ 338-4338.
+    ''');
+    });
+
     test('complicated example', () {
       expectUnchangedYamlAfterLoading('''verb: RecommendCafes
 map:
@@ -558,6 +604,43 @@ Sammy Sosa: {
   - 2001-07-02
   - 2001-08-12
   - 2001-08-14
+'''));
+    });
+
+    test('block map', () {
+      var doc = loadYaml('''
+a: 1
+b: 2
+c: 3
+''');
+      doc['b'] = 4;
+
+      expect(doc.toString(), equals('''
+a: 1
+b: 4
+c: 3
+'''));
+    });
+
+    test('block map (2)', () {
+      var doc = loadYaml('''
+a: 1
+b: >
+     Sammy Sosa completed another
+     fine season with great stats.
+
+       63 Home Runs
+       0.288 Batting Average
+  
+     What a year!
+c: 3
+''');
+      doc['b'] = 4;
+
+      expect(doc.toString(), equals('''
+a: 1
+b: 4
+c: 3
 '''));
     });
 
