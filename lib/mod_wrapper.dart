@@ -28,9 +28,10 @@ class ModifiableYAML {
     return path;
   }
 
-  void getValueIn(path) {
+  dynamic getValueIn(path) {
     var current = _getToBeforeLast(path);
     var lastNode = _getLastInPath(path);
+    if (current[lastNode] == null) return null;
     return current[lastNode].value;
   }
 
@@ -50,7 +51,11 @@ class ModifiableYAML {
     if (value is Map) {
       var keys = value.keys.toList();
       for (var key in keys) {
-        upsertIn([...path, key], value[key]);
+        if (getValueIn(path) == null) {
+          setIn([...path], value);
+        } else {
+          upsertIn([...path, key], value[key]);
+        }
       }
     } else {
       setIn(path, value);
