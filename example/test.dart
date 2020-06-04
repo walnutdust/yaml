@@ -2,15 +2,16 @@ import 'package:yaml/mod.dart';
 
 void main() {
   var doc = loadYaml('''
-? - Detroit Tigers
+# a comment?
+? # a comment?
+  - Detroit Tigers
   - Chicago cubs
-: 2002-08-03
+:
+  - 2001-07-23
 
-? [ New York Yankees,
-    Atlanta Braves ]
-: [ 2001-07-02, 2001-08-12,
-    2001-08-14 ]
+a: b
 ''');
-  doc[['Detroit Tigers', 'Chicago cubs']] = ['2001-07-23'];
+  print(doc.value);
+  doc.remove(['Detroit Tigers', 'Chicago cubs']);
   print(doc);
 }

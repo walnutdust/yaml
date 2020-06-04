@@ -429,12 +429,14 @@ Sammy Sosa: {
 
     test('block map with complex keys (6)', () {
       var doc = loadYaml('''
-? - Detroit Tigers
+? 
+  - Detroit Tigers
   - Chicago cubs
 :
   - 2001-07-23
 
-? [ New York Yankees,
+? 
+  [ New York Yankees,
     Atlanta Braves ]
 : 2002-08-03
 ''');
@@ -447,12 +449,14 @@ Sammy Sosa: {
       // Note that the output format is not flow because we render to block
       // where possible.
       expect(doc.toString(), equals('''
-? - Detroit Tigers
+? 
+  - Detroit Tigers
   - Chicago cubs
 :
   - 2001-07-23
 
-? [ New York Yankees,
+? 
+  [ New York Yankees,
     Atlanta Braves ]
 : 
   - 2001-07-02
@@ -514,6 +518,46 @@ Sammy Sosa: {
 : [ 2001-07-02, # comment
     2002-09-13, # comment
     2001-08-14 ]
+'''));
+    });
+
+    test('block map with complex keys and comments (3)', () {
+      var doc = loadYaml('''
+# a comment?
+? # a comment?
+  - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? 
+  [ New York Yankees,
+    Atlanta Braves ]
+: 2002-08-03
+''');
+      doc[['New York Yankees', 'Atlanta Braves']] = [
+        '2001-07-02',
+        '2001-08-12',
+        '2001-08-14'
+      ];
+
+      // Note that the output format is not flow because we render to block
+      // where possible.
+      expect(doc.toString(), equals('''
+# a comment?
+? # a comment?
+  - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? 
+  [ New York Yankees,
+    Atlanta Braves ]
+: 
+  - 2001-07-02
+  - 2001-08-12
+  - 2001-08-14
 '''));
     });
 
@@ -903,10 +947,77 @@ c: 3
 '''));
     });
 
+    test('simple block map (2)', () {
+      var doc = loadYaml('''
+a: 1
+b: 
+  - 4
+  - 5
+c: 3
+''');
+      doc.remove('b');
+      expect(doc.toString(), equals('''
+a: 1
+c: 3
+'''));
+    });
+
     test('simple flow map ', () {
       var doc = loadYaml('{a: 1, b: 2, c: 3}');
       doc.remove('b');
       expect(doc.toString(), equals('{a: 1, c: 3}'));
+    });
+
+    test('block map with complex keys and comments', () {
+      var doc = loadYaml('''
+# a comment?
+? # a comment?
+  - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? 
+  [ New York Yankees,
+    Atlanta Braves ]
+: 2002-08-03
+''');
+      doc.remove(['Detroit Tigers', 'Chicago cubs']);
+
+      // Note that the output format is not flow because we render to block
+      // where possible.
+      expect(doc.toString(), equals('''
+# a comment?
+
+
+? 
+  [ New York Yankees,
+    Atlanta Braves ]
+: 2002-08-03
+'''));
+    });
+
+    test('block map with complex keys and comments (2)', () {
+      var doc = loadYaml('''
+# a comment?
+? # a comment?
+  - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+a: b
+''');
+      doc.remove(['Detroit Tigers', 'Chicago cubs']);
+
+      // Note that the output format is not flow because we render to block
+      // where possible.
+      expect(doc.toString(), equals('''
+# a comment?
+
+
+a: b
+'''));
     });
   });
 

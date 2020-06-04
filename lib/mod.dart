@@ -262,19 +262,20 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
       throw UnsupportedError('Unable to get indentation for empty block list');
     }
 
-    var lastKey = nodes.keys.last as YamlNode;
-    var lastKeyOffset = lastKey.span.start.offset;
-    var lastNewLine = _baseYaml.yaml.lastIndexOf('\n', lastKeyOffset);
-    if (lastNewLine == -1) lastNewLine = 0;
+    var firstKey = nodes.keys.first as YamlNode;
+    var firstKeyOffset = firstKey.span.start.offset;
+    var prevNewLine = _baseYaml.yaml.lastIndexOf('\n', firstKeyOffset);
+    if (prevNewLine == -1) prevNewLine = 0;
 
     // Check for complex keys. If there is one, we count indentation as the
     // position of the ?
-    var lastQuestionMark = _baseYaml.yaml.lastIndexOf('?', lastKeyOffset);
-    if (lastQuestionMark > lastNewLine) {
-      return lastQuestionMark - lastNewLine - 1;
+    var questionMarkIndex = _baseYaml.yaml.indexOf('?', _span.start.offset);
+
+    if (questionMarkIndex > -1 && questionMarkIndex <= firstKeyOffset) {
+      return questionMarkIndex - _span.start.offset;
     }
 
-    return lastKeyOffset - lastNewLine - 1;
+    return firstKeyOffset - prevNewLine - 1;
   }
 
   _ModifiableYamlMap.from(YamlMap yamlMap, _YAML baseYaml) {
@@ -284,6 +285,7 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
 
     nodes = deepEqualsMap<dynamic, _ModifiableYamlNode>();
     for (var entry in yamlMap.nodes.entries) {
+      // TODO(walnut): convert key to modifiable yaml node?
       nodes[entry.key] = _modifiedYamlNodeFrom(entry.value, baseYaml);
     }
   }
@@ -318,13 +320,13 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
     if (!nodes.containsKey(key)) return null;
 
     var keyNode =
-        (nodes.keys.firstWhere((node) => node.value == key) as YamlNode);
+        (nodes.keys.firstWhere((node) => deepEquals(node, key)) as YamlNode);
     var valueNode = nodes.remove(key);
 
     if (style == CollectionStyle.FLOW) {
-      removeFromFlowMap(keyNode.span, valueNode.span, key);
+      removeFromFlowMap(keyNode, valueNode, key);
     } else {
-      removeFromBlockMap(keyNode.span, valueNode.span);
+      removeFromBlockMap(keyNode, valueNode);
     }
 
     return valueNode;
@@ -393,7 +395,10 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
   @override
   Iterable get keys => nodes.keys.map((node) => node.value);
 
-  void removeFromFlowMap(SourceSpan keySpan, SourceSpan valueSpan, Object key) {
+  void removeFromFlowMap(
+      YamlNode keyNode, _ModifiableYamlNode valueNode, Object key) {
+    var keySpan = keyNode.span;
+    var valueSpan = valueNode.span;
     var start = keySpan.start.offset;
     var end = valueSpan.end.offset;
 
@@ -407,9 +412,33 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
     _baseYaml._removeRange(start, end);
   }
 
-  void removeFromBlockMap(SourceSpan keySpan, SourceSpan valueSpan) {
-    var start = _baseYaml.yaml.lastIndexOf('\n', keySpan.start.offset);
-    var end = _baseYaml.yaml.indexOf('\n', valueSpan.end.offset);
+  int getKeyStart(YamlNode keyNode) {
+    var keyOffset = keyNode.span.start.offset;
+
+    // TODO
+    // the question mark has to happen after start of the map, or after previous key
+    var possibleQnMarkStartIndex = span.start.offset;
+    var keyList = keys.toList();
+    var currKeyIndex = keyList.indexWhere((key) => deepEquals(keyNode, key));
+    if (currKeyIndex > 0) {
+      var prevKey = keyList[currKeyIndex - 1];
+      var prevValNodeEnd = nodes[prevKey].span.end.offset;
+      possibleQnMarkStartIndex = prevValNodeEnd;
+    }
+
+    var questionMarkIndex =
+        _baseYaml.yaml.indexOf('?', possibleQnMarkStartIndex);
+
+    if (questionMarkIndex > -1 && questionMarkIndex <= keyOffset) {
+      return questionMarkIndex;
+    }
+
+    return _baseYaml.yaml.lastIndexOf('\n', keyOffset);
+  }
+
+  void removeFromBlockMap(YamlNode keyNode, _ModifiableYamlNode valueNode) {
+    var start = getKeyStart(keyNode);
+    var end = _getContentSensitiveEnd(valueNode);
     _baseYaml._removeRange(start, end);
   }
 }
