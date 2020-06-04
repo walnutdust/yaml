@@ -263,11 +263,18 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
     }
 
     var lastKey = nodes.keys.last as YamlNode;
-    var lastSpanOffset = lastKey.span.start.offset;
-    var lastNewLine = _baseYaml.yaml.lastIndexOf('\n', lastSpanOffset);
+    var lastKeyOffset = lastKey.span.start.offset;
+    var lastNewLine = _baseYaml.yaml.lastIndexOf('\n', lastKeyOffset);
     if (lastNewLine == -1) lastNewLine = 0;
 
-    return lastSpanOffset - lastNewLine - 1;
+    // Check for complex keys. If there is one, we count indentation as the
+    // position of the ?
+    var lastQuestionMark = _baseYaml.yaml.lastIndexOf('?', lastKeyOffset);
+    if (lastQuestionMark > lastNewLine) {
+      return lastQuestionMark - lastNewLine - 1;
+    }
+
+    return lastKeyOffset - lastNewLine - 1;
   }
 
   _ModifiableYamlMap.from(YamlMap yamlMap, _YAML baseYaml) {
@@ -369,14 +376,14 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
         getBlockString(newValue, indentation + _YAML.DEFAULT_INDENTATION);
 
     // +1 accounts for the ':'
-    var start = getKeyNode(key).span.end.offset + 1;
+    var keyEndOffset = getKeyNode(key).span.end.offset;
+    var start = _baseYaml.yaml.indexOf(':', keyEndOffset) + 1;
     var end = _getContentSensitiveEnd(value);
 
     if (isCollection(newValue)) valueString = '\n' + valueString;
 
     // Canonically add a space after the colon in mapping.
     valueString = ' ' + valueString;
-
     _baseYaml._replaceRange(start, end, valueString);
   }
 

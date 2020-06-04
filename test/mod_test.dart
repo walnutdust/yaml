@@ -375,6 +375,92 @@ Sammy Sosa: {
 '''));
     });
 
+    test('block map with complex keys (4)', () {
+      var doc = loadYaml('''
+? - Detroit Tigers
+  - Chicago cubs
+: 2002-08-03
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+''');
+      doc[['Detroit Tigers', 'Chicago cubs']] = ['2001-07-23'];
+
+      expect(doc.toString(), equals('''
+? - Detroit Tigers
+  - Chicago cubs
+: 
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+'''));
+    });
+
+    test('block map with complex keys (5)', () {
+      var doc = loadYaml('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+''');
+      doc[['New York Yankees', 'Atlanta Braves']] = '2002-08-03';
+
+      expect(doc.toString(), equals('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: 2002-08-03
+'''));
+    });
+
+    test('block map with complex keys (6)', () {
+      var doc = loadYaml('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: 2002-08-03
+''');
+      doc[['New York Yankees', 'Atlanta Braves']] = [
+        '2001-07-02',
+        '2001-08-12',
+        '2001-08-14'
+      ];
+
+      // Note that the output format is not flow because we render to block
+      // where possible.
+      expect(doc.toString(), equals('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: 
+  - 2001-07-02
+  - 2001-08-12
+  - 2001-08-14
+'''));
+    });
+
     test('block map with complex keys and comments', () {
       var doc = loadYaml('''
 ? - Detroit Tigers
