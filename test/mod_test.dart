@@ -349,9 +349,33 @@ Sammy Sosa: {
 '''));
     });
 
-    // TODO(walnut): update from array -> normal value
+    test('block map with complex keys (3)', () {
+      var doc = loadYaml('''
+? - Detroit Tigers
+  - Chicago cubs
+:
+  - 2001-07-23
 
-    test('block map with complex keys', () {
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+''');
+      doc[['Detroit Tigers', 'Chicago cubs']] = '2002-08-03';
+
+      expect(doc.toString(), equals('''
+? - Detroit Tigers
+  - Chicago cubs
+: 2002-08-03
+
+? [ New York Yankees,
+    Atlanta Braves ]
+: [ 2001-07-02, 2001-08-12,
+    2001-08-14 ]
+'''));
+    });
+
+    test('block map with complex keys and comments', () {
       var doc = loadYaml('''
 ? - Detroit Tigers
   - Chicago cubs
@@ -378,7 +402,7 @@ Sammy Sosa: {
 '''));
     });
 
-    test('block map with complex keys  and comments (2)', () {
+    test('block map with complex keys and comments (2)', () {
       var doc = loadYaml('''
 ? - Detroit Tigers
   - Chicago cubs
@@ -469,6 +493,36 @@ a: 1
 b: 
   d: 4
   e: 5
+c: 3
+''');
+      doc['b'] = 2;
+
+      expect(doc.toString(), equals('''
+a: 1
+b: 2
+c: 3
+'''));
+    });
+
+    test('flow map in block map to scalar', () {
+      var doc = loadYaml('''
+a: 1
+b: {d: 4, e: 5}
+c: 3
+''');
+      doc['b'] = 2;
+
+      expect(doc.toString(), equals('''
+a: 1
+b: 2
+c: 3
+'''));
+    });
+
+    test('flow list in block map to scalar', () {
+      var doc = loadYaml('''
+a: 1
+b: [d, e]
 c: 3
 ''');
       doc['b'] = 2;

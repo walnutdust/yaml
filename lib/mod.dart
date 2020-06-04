@@ -367,10 +367,15 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
     var value = nodes[key];
     var valueString =
         getBlockString(newValue, indentation + _YAML.DEFAULT_INDENTATION);
-    var start = getKeyNode(key).span.end.offset + 2;
+
+    // +1 accounts for the ':'
+    var start = getKeyNode(key).span.end.offset + 1;
     var end = _getContentSensitiveEnd(value);
 
     if (isCollection(newValue)) valueString = '\n' + valueString;
+
+    // Canonically add a space after the colon in mapping.
+    valueString = ' ' + valueString;
 
     _baseYaml._replaceRange(start, end, valueString);
   }
@@ -439,9 +444,10 @@ String getBlockString(Object value, [int indentation = 0]) {
 /// Returns the content sensitive ending offset of a node (i.e. where the last
 /// meaningful content happens)
 int _getContentSensitiveEnd(_ModifiableYamlNode node) {
-  if (node is _ModifiableYamlList) {
+  if (node is _ModifiableYamlList && node.style == CollectionStyle.BLOCK) {
     return _getContentSensitiveEnd(node.last as _ModifiableYamlNode);
-  } else if (node is _ModifiableYamlMap) {
+  } else if (node is _ModifiableYamlMap &&
+      node.style == CollectionStyle.BLOCK) {
     return _getContentSensitiveEnd(node.values.last as _ModifiableYamlNode);
   }
 
