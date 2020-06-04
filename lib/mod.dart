@@ -285,7 +285,6 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
 
     nodes = deepEqualsMap<dynamic, _ModifiableYamlNode>();
     for (var entry in yamlMap.nodes.entries) {
-      // TODO(walnut): convert key to modifiable yaml node?
       nodes[entry.key] = _modifiedYamlNodeFrom(entry.value, baseYaml);
     }
   }
@@ -320,7 +319,7 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
     if (!nodes.containsKey(key)) return null;
 
     var keyNode =
-        (nodes.keys.firstWhere((node) => deepEquals(node, key)) as YamlNode);
+        nodes.keys.firstWhere((node) => deepEquals(node, key)) as YamlNode;
     var valueNode = nodes.remove(key);
 
     if (style == CollectionStyle.FLOW) {
@@ -415,8 +414,6 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
   int getKeyStart(YamlNode keyNode) {
     var keyOffset = keyNode.span.start.offset;
 
-    // TODO
-    // the question mark has to happen after start of the map, or after previous key
     var possibleQnMarkStartIndex = span.start.offset;
     var keyList = keys.toList();
     var currKeyIndex = keyList.indexWhere((key) => deepEquals(keyNode, key));
