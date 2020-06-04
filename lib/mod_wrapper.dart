@@ -34,7 +34,6 @@ class ModifiableYAML {
     return current[lastNode].value;
   }
 
-  // ! Make all methods here void so users do not have access
   void setIn(path, value) {
     var current = _getToBeforeLast(path);
     var lastNode = _getLastInPath(path);
@@ -45,6 +44,17 @@ class ModifiableYAML {
     var current = _getToBeforeLast(path);
     var lastNode = _getLastInPath(path);
     current.remove(lastNode);
+  }
+
+  void upsertIn(path, value) {
+    if (value is Map) {
+      var keys = value.keys.toList();
+      for (var key in keys) {
+        upsertIn([...path, key], value[key]);
+      }
+    } else {
+      setIn(path, value);
+    }
   }
 
   @override
