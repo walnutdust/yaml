@@ -185,6 +185,27 @@ recipe:
       expect(doc.toString(), equals("a: '2'"));
     });
 
+    test('simple block map (3)', () {
+      var doc = loadYaml('a: 1');
+      doc['a'] = '';
+
+      expect(doc.toString(), equals("a: ''"));
+    });
+
+    test('simple block map (4)', () {
+      var doc = loadYaml('a: 1');
+      doc['a'] = 'null';
+
+      expect(doc.toString(), equals("a: 'null'"));
+    });
+
+    test('simple block map (5)', () {
+      var doc = loadYaml('a: 1');
+      doc['a'] = 'false';
+
+      expect(doc.toString(), equals("a: 'false'"));
+    });
+
     test('simple block map with comment', () {
       var doc = loadYaml("YAML: YAML Ain't Markup Language # comment");
       doc['YAML'] = 'hi';
