@@ -178,6 +178,13 @@ recipe:
       expect(doc.toString(), equals('YAML: hi'));
     });
 
+    test('simple block map (2)', () {
+      var doc = loadYaml('a: 1');
+      doc['a'] = '2';
+
+      expect(doc.toString(), equals("a: '2'"));
+    });
+
     test('simple block map with comment', () {
       var doc = loadYaml("YAML: YAML Ain't Markup Language # comment");
       doc['YAML'] = 'hi';

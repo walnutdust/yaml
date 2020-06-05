@@ -490,9 +490,22 @@ class _ModifiableYamlMap extends _ModifiableYamlNode with collection.MapMixin {
   }
 }
 
-/// Returns a safe string by checking for strings that begin with > or |
-String getSafeString(String string) {
-  if (string.startsWith('>') || string.startsWith('|')) {
+/// Returns a safe string by checking for strings that begin with > or |,
+/// as well as whether the string is a representation of an integer, and parses them
+/// accordingly.
+String getSafeString(Object value) {
+  if (value is String) {
+    // Check if value might be mistaken as some other variable when parsed
+    var yamlNode = loadYamlNode(value);
+    if (yamlNode.value is! String) {
+      return '\'$value\'';
+    }
+  }
+
+  var string = value.toString();
+  var trimmedString = string.trimLeft();
+
+  if (trimmedString.startsWith('>') || trimmedString.startsWith('|')) {
     return '\'$string\'';
   }
 
@@ -501,7 +514,7 @@ String getSafeString(String string) {
 
 /// Returns values as strings representing flow objects.
 String getFlowString(Object value) {
-  return getSafeString(value.toString());
+  return getSafeString(value);
 }
 
 /// Returns values as strings representing block objects.
@@ -521,7 +534,7 @@ String getBlockString(Object value, [int indentation = 0]) {
     }).join('\n');
   }
 
-  return getSafeString(value.toString());
+  return getSafeString(value);
 }
 
 /// Returns the content sensitive ending offset of a node (i.e. where the last
