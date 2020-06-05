@@ -28,17 +28,32 @@ class ModifiableYAML {
     return path;
   }
 
-  dynamic getValueIn(path) {
+  dynamic _getElemInPath(path) {
+    if (path is List && path.isEmpty) {
+      return _contents;
+    }
+
     var current = _getToBeforeLast(path);
     var lastNode = _getLastInPath(path);
-    if (current[lastNode] == null) return null;
-    return current[lastNode].value;
+
+    return current[lastNode];
+  }
+
+  dynamic getValueIn(path) {
+    var elem = _getElemInPath(path);
+    if (elem == null) return null;
+    return elem.value;
   }
 
   void setIn(path, value) {
     var current = _getToBeforeLast(path);
     var lastNode = _getLastInPath(path);
     current[lastNode] = value;
+  }
+
+  void addIn(path, value) {
+    var elem = _getElemInPath(path);
+    elem.add(value);
   }
 
   void removeIn(path) {
