@@ -14,4 +14,18 @@ a: b
   print(doc.value);
   doc.remove(['Detroit Tigers', 'Chicago cubs']);
   print(doc);
+  doc.undo();
+  print('===============');
+  print(doc);
+  doc.redo();
+  print('===============');
+  print(doc);
+
+  print('=============');
+  doc.undo();
+  print('===============');
+  print(doc);
+  doc.redo();
+  print('===============');
+  print(doc);
 }

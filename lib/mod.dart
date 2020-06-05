@@ -10,8 +10,16 @@ dynamic loadYaml = (String yaml) => _YAML(yaml);
 /// interfaces. Every time a modification takes place, the string is re-parsed,
 /// so users are guaranteed that calling toString() will result in valid YAML.
 class _YAML {
-  /// Original YAML string from which this instance is constructed.
+  /// Current YAML string representing the data.
   String yaml;
+
+  /// Original YAML string from which this instance is constructed.
+  final String originalYaml;
+
+  final collection.ListQueue<SourceEdit> _prevEdits =
+      collection.ListQueue<SourceEdit>();
+  final collection.ListQueue<SourceEdit> _futureEdits =
+      collection.ListQueue<SourceEdit>();
 
   /// Root node of YAML AST.
   // Definitely a _ModifiableYamlNode, but dynamic allows us to implement both
@@ -20,7 +28,8 @@ class _YAML {
 
   static const int DEFAULT_INDENTATION = 2;
 
-  _YAML(this.yaml) {
+  _YAML(this.originalYaml) {
+    yaml = originalYaml;
     var contents = loadYamlNode(yaml);
     _contents = _modifiedYamlNodeFrom(contents, this);
   }
@@ -45,7 +54,6 @@ class _YAML {
 
   void replaceRangeFromSpan(SourceSpan span, String replacement) {
     var start = span.start.offset;
-    // var end = span.end.offset;
     var end = _getSpaceSensitiveEnd(yaml, span.end.offset);
 
     _replaceRange(start, end, replacement);
@@ -54,10 +62,52 @@ class _YAML {
   void _removeRange(int start, int end) => _replaceRange(start, end, '');
 
   void _replaceRange(int start, int end, String replacement) {
+    var original = yaml.substring(start, end);
     yaml = yaml.replaceRange(start, end, replacement);
 
+    _reload();
+
+    _prevEdits.addLast(SourceEdit(start, end - start, replacement, original));
+
+    if (_futureEdits.isNotEmpty) {
+      _futureEdits.clear();
+    }
+  }
+
+  void _reload() {
     var contents = loadYamlNode(yaml);
     _contents = _modifiedYamlNodeFrom(contents, this);
+  }
+
+  bool canUndo() => _prevEdits.isNotEmpty;
+  bool canRedo() => _futureEdits.isNotEmpty;
+
+  void undo() {
+    if (!canUndo()) {
+      throw Exception('No actions to undo!');
+    }
+
+    var lastEdit = _prevEdits.removeLast();
+
+    yaml = yaml.replaceRange(lastEdit.offset,
+        lastEdit.offset + lastEdit.replacement.length, lastEdit.original);
+
+    _reload();
+    _futureEdits.addLast(lastEdit);
+  }
+
+  void redo() {
+    if (!canRedo()) {
+      throw Exception('No actions to redo!');
+    }
+
+    var nextEdit = _futureEdits.removeLast();
+
+    yaml = yaml.replaceRange(nextEdit.offset,
+        nextEdit.original.length + nextEdit.offset, nextEdit.replacement);
+
+    _reload();
+    _prevEdits.addLast(nextEdit);
   }
 }
 
@@ -497,3 +547,12 @@ int _getSpaceSensitiveEnd(String yaml, int offset) {
 }
 
 bool isCollection(Object item) => item is Map || item is List;
+
+class SourceEdit {
+  final int offset;
+  final int length;
+  final String replacement;
+  final String original;
+
+  SourceEdit(this.offset, this.length, this.replacement, this.original);
+}
